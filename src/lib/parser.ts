@@ -75,7 +75,7 @@ export function parseQuickAdd(input: string): ParsedInput {
   let time: Date | undefined;
   let startTime: Date | undefined;
   let endTime: Date | undefined;
-  let allDay = false;
+  const allDay = false;
   
   const now = new Date();
   

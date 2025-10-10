@@ -1,5 +1,5 @@
 // Recurrence logic for generating next occurrence
-import { Recurrence, Item } from "@/types";
+import { Item } from "@/types";
 
 export function getNextOccurrence(item: Item): Date | null {
   if (!item.recurrence || item.recurrence.preset === "none") return null;

@@ -158,7 +158,7 @@ export function TodayView({ items, onToggleComplete, onEdit, onDelete }: TodayVi
                   animate={{ opacity: 1 }}
                   className="text-2xl font-bold text-gradient"
                 >
-                  Today's Progress
+                  Today&apos;s Progress
                 </motion.h3>
                 <p className="text-sm text-muted-foreground mt-1">
                   {completedToday} of {totalToday} tasks completed

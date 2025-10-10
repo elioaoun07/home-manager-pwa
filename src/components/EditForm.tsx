@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Item, ItemType, Priority, RecurrencePreset } from "@/types";
+import { Item, ItemType, Priority } from "@/types";
 import { X, Save, Sparkles, Tag, AlertCircle, Calendar, Clock, StickyNote } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 

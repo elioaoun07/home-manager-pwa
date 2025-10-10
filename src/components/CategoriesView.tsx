@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Item, Priority } from "@/types";
 import { ItemCard } from "./ItemCard";
 import { AnimatePresence, motion } from "framer-motion";
-import { Filter, Tag, AlertCircle, Sparkles, X } from "lucide-react";
+import { Filter, Tag, AlertCircle, X } from "lucide-react";
 
 interface CategoriesViewProps {
   items: Item[];
