@@ -1,103 +1,285 @@
-import Image from "next/image";
+"use client";
+
+import { useState, useEffect } from "react";
+import { Item, ViewType, ParsedInput } from "@/types";
+import { storage } from "@/lib/storage";
+import { generateNextInstance } from "@/lib/recurrence";
+import { seedItems } from "@/lib/seedData";
+import { QuickAdd } from "@/components/QuickAdd";
+import { TodayView } from "@/components/TodayView";
+import { UpcomingView } from "@/components/UpcomingView";
+import { CalendarView } from "@/components/CalendarView";
+import { CategoriesView } from "@/components/CategoriesView";
+import { BottomNav } from "@/components/BottomNav";
+import { FAB } from "@/components/FAB";
+import { EditForm } from "@/components/EditForm";
+import { Drawer, DrawerContent } from "@/components/ui/drawer";
+import { toast } from "sonner";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [items, setItems] = useState<Item[]>([]);
+  const [currentView, setCurrentView] = useState<ViewType>("today");
+  const [editingItem, setEditingItem] = useState<Item | null>(null);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  // Load items from storage on mount
+  useEffect(() => {
+    const loadedItems = storage.getItems();
+    
+    // If no items, seed with demo data
+    if (loadedItems.length === 0) {
+      storage.saveItems(seedItems);
+      setItems(seedItems);
+    } else {
+      setItems(loadedItems);
+    }
+    
+    setIsInitialized(true);
+  }, []);
+
+  // Save items to storage whenever they change
+  useEffect(() => {
+    if (isInitialized) {
+      storage.saveItems(items);
+    }
+  }, [items, isInitialized]);
+
+  const handleQuickAdd = (parsed: ParsedInput) => {
+    const now = new Date().toISOString();
+    const newItem: Item = {
+      id: crypto.randomUUID(),
+      type: parsed.type,
+      title: parsed.title,
+      categories: parsed.categories,
+      priority: parsed.priority,
+      completed: false,
+      created_at: now,
+      updated_at: now,
+    };
+
+    if (parsed.type === "event") {
+      newItem.start_at = parsed.startTime?.toISOString() || parsed.time?.toISOString();
+      newItem.end_at = parsed.endTime?.toISOString();
+      newItem.all_day = parsed.allDay;
+    } else {
+      newItem.due_at = parsed.time?.toISOString() || null;
+    }
+
+    if (parsed.recurrence) {
+      newItem.recurrence = parsed.recurrence;
+    }
+
+    // Optimistic UI update with animation
+    setItems((prev) => [...prev, newItem]);
+    toast.success(
+      <div className="flex items-center gap-2">
+        <span className="font-semibold">{newItem.title}</span>
+        <span className="text-sm text-muted-foreground">has been added</span>
+      </div>
+    );
+  };
+
+  const handleToggleComplete = (id: string) => {
+    let itemTitle = "";
+    let isCompleted = false;
+
+    setItems((prev) =>
+      prev.map((item) => {
+        if (item.id === id) {
+          itemTitle = item.title;
+          isCompleted = !item.completed;
+          const updated = { ...item, completed: isCompleted };
+          
+          // If completing a recurring item, generate next instance
+          if (updated.completed && item.recurrence && item.recurrence.preset !== "none") {
+            const nextInstance = generateNextInstance(item);
+            if (nextInstance) {
+              // Add next instance
+              setTimeout(() => {
+                setItems((current) => [...current, nextInstance]);
+                toast.info(
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm">Next instance for</span>
+                    <span className="font-semibold">{item.title}</span>
+                    <span className="text-sm">created</span>
+                  </div>
+                );
+              }, 300);
+            }
+          }
+          
+          return updated;
+        }
+        return item;
+      })
+    );
+
+    if (itemTitle) {
+      toast.success(
+        <div className="flex items-center gap-2">
+          <span className="font-semibold">{itemTitle}</span>
+          <span className="text-sm text-muted-foreground">
+            marked as {isCompleted ? 'complete' : 'incomplete'}
+          </span>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+      );
+    }
+  };
+
+  const handleEdit = (item: Item) => {
+    setEditingItem(item);
+    setIsDrawerOpen(true);
+  };
+
+  const handleDelete = (id: string) => {
+    let itemTitle = "";
+    setItems((prev) => prev.filter((item) => {
+      if (item.id === id) {
+        itemTitle = item.title;
+        return false;
+      }
+      return true;
+    }));
+    
+    if (itemTitle) {
+      toast.error(
+        <div className="flex items-center gap-2">
+          <span className="font-semibold">{itemTitle}</span>
+          <span className="text-sm text-muted-foreground">has been deleted</span>
+        </div>
+      );
+    }
+  };
+
+  const handleSaveEdit = (item: Item) => {
+    const isNew = !editingItem;
+    if (isNew) {
+      // Create new
+      setItems((prev) => [...prev, item]);
+    } else {
+      // Update existing
+      setItems((prev) => prev.map((i) => (i.id === item.id ? item : i)));
+    }
+    
+    setIsDrawerOpen(false);
+    setEditingItem(null);
+    
+    toast.success(
+      <div className="flex items-center gap-2">
+        <span className="font-semibold">{item.title}</span>
+        <span className="text-sm text-muted-foreground">
+          has been {isNew ? 'created' : 'updated'}
+        </span>
+      </div>
+    );
+  };
+
+  const handleCancelEdit = () => {
+    setIsDrawerOpen(false);
+    setEditingItem(null);
+  };
+
+  const handleFABClick = () => {
+    setEditingItem(null);
+    setIsDrawerOpen(true);
+  };
+
+  if (!isInitialized) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="text-center"
         >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+            className="w-16 h-16 mx-auto mb-4 rounded-full border-4 border-primary border-t-transparent"
           />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+          <p className="text-muted-foreground text-lg font-medium">Loading your tasks...</p>
+        </motion.div>
+      </div>
+    );
+  }
+
+  return (
+    <Drawer
+      open={isDrawerOpen}
+      onOpenChange={setIsDrawerOpen}
+      onClose={handleCancelEdit}
+    >
+      <div className="min-h-screen bg-background relative overflow-hidden">
+        {/* Animated background */}
+        <div className="fixed inset-0 gradient-mesh opacity-30 pointer-events-none" />
+        <div className="fixed inset-0 bg-[radial-gradient(circle_at_50%_120%,hsl(var(--primary)/0.1),transparent_50%)] pointer-events-none" />
+
+        <QuickAdd onAdd={handleQuickAdd} />
+
+        <main className="relative max-w-2xl mx-auto px-4 pt-4">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={currentView}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              {currentView === "today" && (
+                <TodayView
+                  items={items}
+                  onToggleComplete={handleToggleComplete}
+                  onEdit={handleEdit}
+                  onDelete={handleDelete}
+                />
+              )}
+
+              {currentView === "upcoming" && (
+                <UpcomingView
+                  items={items}
+                  days={30}
+                  onToggleComplete={handleToggleComplete}
+                  onEdit={handleEdit}
+                  onDelete={handleDelete}
+                />
+              )}
+
+              {currentView === "calendar" && (
+                <CalendarView
+                  items={items}
+                  onToggleComplete={handleToggleComplete}
+                  onEdit={handleEdit}
+                  onDelete={handleDelete}
+                />
+              )}
+
+              {currentView === "categories" && (
+                <CategoriesView
+                  items={items}
+                  onToggleComplete={handleToggleComplete}
+                  onEdit={handleEdit}
+                  onDelete={handleDelete}
+                />
+              )}
+            </motion.div>
+          </AnimatePresence>
+        </main>
+
+        <BottomNav currentView={currentView} onViewChange={setCurrentView} />
+        <FAB onClick={handleFABClick} />
+
+        <DrawerContent>
+          <div className="px-4 pb-8">
+            <EditForm
+              item={editingItem}
+              onSave={handleSaveEdit}
+              onCancel={handleCancelEdit}
+            />
+          </div>
+        </DrawerContent>
+      </div>
+    </Drawer>
   );
 }

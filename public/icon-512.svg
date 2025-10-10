@@ -1,0 +1,6 @@
+<!-- Placeholder for icon-512.png -->
+<!-- In production, replace with actual 512x512 PNG icon -->
+<svg width="512" height="512" xmlns="http://www.w3.org/2000/svg">
+  <rect width="512" height="512" fill="#3b82f6"/>
+  <text x="256" y="300" font-size="220" text-anchor="middle" fill="white" font-weight="bold">📋</text>
+</svg>
