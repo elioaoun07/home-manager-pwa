@@ -1,16 +1,16 @@
 "use client";
 
-import { Item } from "@/types";
+import { ItemWithDetails } from "@/types";
 import { ItemCard } from "./ItemCard";
 import { getItemDate } from "@/lib/utils";
 import { AnimatePresence, motion } from "framer-motion";
 import { CalendarDays, Sparkles } from "lucide-react";
 
 interface UpcomingViewProps {
-  items: Item[];
+  items: ItemWithDetails[];
   days: number; // 7 or 30
   onToggleComplete: (id: string) => void;
-  onEdit: (item: Item) => void;
+  onEdit: (item: ItemWithDetails) => void;
   onDelete: (id: string) => void;
 }
 
@@ -42,7 +42,7 @@ export function UpcomingView({ items, days, onToggleComplete, onEdit, onDelete }
     }
     acc[dateKey].items.push(item);
     return acc;
-  }, {} as Record<string, { date: Date; items: Item[] }>);
+  }, {} as Record<string, { date: Date; items: ItemWithDetails[] }>);
 
   const groups = Object.values(groupedItems).sort((a, b) => a.date.getTime() - b.date.getTime());
 
@@ -79,7 +79,7 @@ export function UpcomingView({ items, days, onToggleComplete, onEdit, onDelete }
               className="px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20"
             >
               <span className="text-xs font-medium text-primary">
-                {upcomingItems.filter(i => !i.completed).length} pending
+                {upcomingItems.filter(i => i.status !== 'done' && i.status !== 'cancelled').length} pending
               </span>
             </motion.div>
           )}

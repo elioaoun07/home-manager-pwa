@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { ItemWithDetails, ItemType, Priority, ItemStatus, Subtask, EventDetails, ReminderDetails } from "@/types";
+import { ItemWithDetails, ItemType, Priority, ItemStatus, Subtask } from "@/types";
 import { 
   X, Save, Sparkles, Tag, AlertCircle, Calendar, Clock, 
   StickyNote, Globe, Lock, Plus, Trash2, Check 

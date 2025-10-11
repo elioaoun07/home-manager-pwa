@@ -1,15 +1,15 @@
 "use client";
 
-import { Item } from "@/types";
+import { ItemWithDetails } from "@/types";
 import { ItemCard } from "./ItemCard";
 import { isOverdue, isSameDay, getTimeOfDay, getItemDate } from "@/lib/utils";
 import { Sun, Sunset, Moon, AlertTriangle, Sparkles, Trophy } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 
 interface TodayViewProps {
-  items: Item[];
+  items: ItemWithDetails[];
   onToggleComplete: (id: string) => void;
-  onEdit: (item: Item) => void;
+  onEdit: (item: ItemWithDetails) => void;
   onDelete: (id: string) => void;
 }
 
@@ -38,13 +38,13 @@ export function TodayView({ items, onToggleComplete, onEdit, onDelete }: TodayVi
     return date && getTimeOfDay(date) === "evening";
   });
 
-  const completedToday = todayItems.filter(i => i.completed).length;
+  const completedToday = todayItems.filter(i => i.status === 'done').length;
   const totalToday = todayItems.length;
   const progress = totalToday > 0 ? (completedToday / totalToday) * 100 : 0;
 
   const renderSection = (
     title: string, 
-    sectionItems: Item[], 
+    sectionItems: ItemWithDetails[], 
     icon: React.ReactNode, 
     gradient: string,
     highlight = false

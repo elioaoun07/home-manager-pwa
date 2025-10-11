@@ -123,7 +123,7 @@ export async function getItemById(id: string): Promise<ItemWithDetails | null> {
   // Transform the data
   return {
     ...data,
-    categories: data.item_categories?.map((ic: any) => ic.category).filter(Boolean) || [],
+    categories: data.item_categories?.map((ic: { category: unknown }) => ic.category).filter(Boolean) || [],
     event_details: data.event_details?.[0] || undefined,
     reminder_details: data.reminder_details?.[0] || undefined,
     recurrence_rule: data.recurrence_rules?.[0] || undefined,

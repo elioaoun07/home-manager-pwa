@@ -1,5 +1,5 @@
 // Utility functions
-import { Item } from "@/types";
+import { Item, ItemWithDetails } from "@/types";
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 
@@ -39,25 +39,25 @@ export function formatDateTime(date: Date): string {
   return `${dateStr} at ${timeStr}`;
 }
 
-export function isOverdue(item: Item): boolean {
-  if (item.completed) return false;
+export function isOverdue(item: Item | ItemWithDetails): boolean {
+  if ('status' in item && item.status === 'done') return false;
   
   const now = new Date();
+  const itemDate = getItemDate(item);
   
-  if (item.type === "event" && item.start_at) {
-    return new Date(item.start_at) < now;
-  } else if (item.due_at) {
-    return new Date(item.due_at) < now;
+  if (itemDate) {
+    return itemDate < now;
   }
   
   return false;
 }
 
-export function getItemDate(item: Item): Date | null {
-  if (item.type === "event" && item.start_at) {
-    return new Date(item.start_at);
-  } else if (item.due_at) {
-    return new Date(item.due_at);
+export function getItemDate(item: Item | ItemWithDetails): Date | null {
+  // Check if it's ItemWithDetails with nested details
+  if ('event_details' in item && item.event_details?.start_at) {
+    return new Date(item.event_details.start_at);
+  } else if ('reminder_details' in item && item.reminder_details?.due_at) {
+    return new Date(item.reminder_details.due_at);
   }
   return null;
 }

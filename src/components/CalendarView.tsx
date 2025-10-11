@@ -1,16 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { Item } from "@/types";
+import { ItemWithDetails } from "@/types";
 import { getMonthData, isSameDay, getItemDate } from "@/lib/utils";
 import { ItemCard } from "./ItemCard";
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronLeft, ChevronRight, Calendar, Sparkles } from "lucide-react";
 
 interface CalendarViewProps {
-  items: Item[];
+  items: ItemWithDetails[];
   onToggleComplete: (id: string) => void;
-  onEdit: (item: Item) => void;
+  onEdit: (item: ItemWithDetails) => void;
   onDelete: (id: string) => void;
 }
 
@@ -32,7 +32,7 @@ export function CalendarView({ items, onToggleComplete, onEdit, onDelete }: Cale
     setSelectedDate(null);
   };
 
-  const getItemsForDate = (date: Date): Item[] => {
+  const getItemsForDate = (date: Date): ItemWithDetails[] => {
     return items.filter((item) => {
       const itemDate = getItemDate(item);
       return itemDate && isSameDay(itemDate, date);
@@ -110,7 +110,7 @@ export function CalendarView({ items, onToggleComplete, onEdit, onDelete }: Cale
             const isSelected = selectedDate && isSameDay(date, selectedDate);
             const dayItems = getItemsForDate(date);
             const hasItems = dayItems.length > 0;
-            const completedCount = dayItems.filter(i => i.completed).length;
+            const completedCount = dayItems.filter(i => i.status === 'done').length;
             const allCompleted = hasItems && completedCount === dayItems.length;
 
             return (
@@ -145,7 +145,7 @@ export function CalendarView({ items, onToggleComplete, onEdit, onDelete }: Cale
                         transition={{ delay: index * 0.01 + i * 0.05 }}
                         className={`
                           w-1.5 h-1.5 rounded-full
-                          ${item.completed ? 
+                          ${item.status === 'done' ? 
                             "bg-success shadow-[0_0_4px_rgba(34,197,94,0.5)]" : 
                             isToday ? "bg-white" : "bg-primary shadow-[0_0_4px_rgba(168,85,247,0.5)]"}
                         `}
@@ -210,7 +210,7 @@ export function CalendarView({ items, onToggleComplete, onEdit, onDelete }: Cale
                 {selectedItems.length > 0 && (
                   <p className="text-xs text-muted-foreground mt-0.5">
                     {selectedItems.length} {selectedItems.length === 1 ? "item" : "items"} · {" "}
-                    {selectedItems.filter(i => i.completed).length} completed
+                    {selectedItems.filter(i => i.status === 'done').length} completed
                   </p>
                 )}
               </div>
