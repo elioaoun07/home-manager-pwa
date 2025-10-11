@@ -11,19 +11,41 @@ export function formatRelativeTime(date: Date): string {
   const minutes = Math.floor(absDiff / 60000);
   const hours = Math.floor(absDiff / 3600000);
   const days = Math.floor(absDiff / 86400000);
+  const weeks = Math.floor(absDiff / (86400000 * 7));
   
-  if (absDiff < 60000) {
-    return diff < 0 ? "Just now" : "In a moment";
-  } else if (minutes < 60) {
-    return diff < 0 ? `${minutes}m ago` : `In ${minutes}m`;
-  } else if (hours < 24) {
-    return diff < 0 ? `${hours}h ago` : `In ${hours}h`;
-  } else if (days === 0) {
+  // Check if it's today
+  const isToday = now.getDate() === date.getDate() &&
+                  now.getMonth() === date.getMonth() &&
+                  now.getFullYear() === date.getFullYear();
+  
+  // Check if it's tomorrow
+  const tomorrow = new Date(now);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const isTomorrow = tomorrow.getDate() === date.getDate() &&
+                      tomorrow.getMonth() === date.getMonth() &&
+                      tomorrow.getFullYear() === date.getFullYear();
+  
+  // Check if it's yesterday
+  const yesterday = new Date(now);
+  yesterday.setDate(yesterday.getDate() - 1);
+  const isYesterday = yesterday.getDate() === date.getDate() &&
+                       yesterday.getMonth() === date.getMonth() &&
+                       yesterday.getFullYear() === date.getFullYear();
+  
+  if (isToday) {
     return "Today";
-  } else if (days === 1) {
-    return diff < 0 ? "Yesterday" : "Tomorrow";
-  } else if (days < 7) {
-    return diff < 0 ? `${days}d ago` : `In ${days}d`;
+  } else if (isTomorrow) {
+    return "Tomorrow";
+  } else if (isYesterday) {
+    return "Yesterday";
+  } else if (diff > 0 && weeks >= 2) {
+    return `In ${weeks} week${weeks > 1 ? 's' : ''}`;
+  } else if (diff > 0 && days >= 2) {
+    return `In ${days} day${days > 1 ? 's' : ''}`;
+  } else if (diff < 0 && weeks >= 2) {
+    return `${weeks} week${weeks > 1 ? 's' : ''} ago`;
+  } else if (diff < 0 && days >= 2) {
+    return `${days} day${days > 1 ? 's' : ''} ago`;
   } else {
     return date.toLocaleDateString();
   }

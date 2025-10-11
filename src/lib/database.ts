@@ -50,11 +50,7 @@ export async function getItems(filters?: {
       event_details!event_details_item_id_fkey (*),
       reminder_details!reminder_details_item_id_fkey (*),
       subtasks (*),
-      recurrence_rules (*),
-      alerts (*),
-      item_categories (
-        category:categories (*)
-      )
+      recurrence_rules (*)
     `);
 
   // Apply filters
@@ -82,12 +78,40 @@ export async function getItems(filters?: {
 
   if (error) throw error;
 
-  // Transform the data to flatten categories
+  // Fetch categories separately for each item
+  const itemIds = (data || []).map(item => item.id);
+  
+  const itemCategoriesMap: Record<string, Category[]> = {};
+  
+  if (itemIds.length > 0) {
+    const { data: itemCategoriesData } = await supabase
+      .from('item_categories')
+      .select(`
+        item_id,
+        category:categories (*)
+      `)
+      .in('item_id', itemIds);
+    
+    // Build a map of item_id -> categories[]
+    if (itemCategoriesData) {
+      itemCategoriesData.forEach((ic: any) => {
+        if (!itemCategoriesMap[ic.item_id]) {
+          itemCategoriesMap[ic.item_id] = [];
+        }
+        // category comes as an array from the join, get first element
+        const category = Array.isArray(ic.category) ? ic.category[0] : ic.category;
+        if (category) {
+          itemCategoriesMap[ic.item_id].push(category);
+        }
+      });
+    }
+  }
+
+  // Transform the data
   const transformed = (data || []).map((item) => {
-    // With explicit FK relationship, event_details/reminder_details come as objects, not arrays
     return {
       ...item,
-      categories: item.item_categories?.map((ic: { category: Category }) => ic.category).filter(Boolean) || [],
+      categories: itemCategoriesMap[item.id] || [],
       event_details: item.event_details || undefined,
       reminder_details: item.reminder_details || undefined,
       recurrence_rule: item.recurrence_rules?.[0] || undefined,
@@ -109,11 +133,7 @@ export async function getItemById(id: string): Promise<ItemWithDetails | null> {
       reminder_details!reminder_details_item_id_fkey (*),
       subtasks (*),
       recurrence_rules (*),
-      alerts (*),
-      attachments (*),
-      item_categories (
-        category:categories (*)
-      )
+      attachments (*)
     `)
     .eq('id', id)
     .eq('user_id', user.id)
@@ -124,10 +144,28 @@ export async function getItemById(id: string): Promise<ItemWithDetails | null> {
     throw error;
   }
 
+  // Fetch categories separately
+  const { data: itemCategoriesData } = await supabase
+    .from('item_categories')
+    .select(`
+      category:categories (*)
+    `)
+    .eq('item_id', id);
+
+  const categories: Category[] = [];
+  if (itemCategoriesData) {
+    itemCategoriesData.forEach((ic: any) => {
+      const category = Array.isArray(ic.category) ? ic.category[0] : ic.category;
+      if (category) {
+        categories.push(category);
+      }
+    });
+  }
+
   // Transform the data (explicit FK returns objects, not arrays)
   return {
     ...data,
-    categories: data.item_categories?.map((ic: { category: unknown }) => ic.category).filter(Boolean) || [],
+    categories,
     event_details: data.event_details || undefined,
     reminder_details: data.reminder_details || undefined,
     recurrence_rule: data.recurrence_rules?.[0] || undefined,
@@ -140,12 +178,25 @@ export async function updateItem(id: string, updates: Partial<Item>): Promise<It
 
   // Remove fields that don't belong to the items table
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { categories, subtasks, event_details, reminder_details, ...itemFields } = updates as Partial<ItemWithDetails>;
+  const { categories, subtasks, event_details, reminder_details, item_categories, recurrence_rule, recurrence_rules, ...itemFields } = updates as any;
+
+  // Only include valid Item table fields
+  const validItemFields: Partial<Item> = {};
+  const validKeys: (keyof Item)[] = [
+    'type', 'title', 'description', 'priority', 'status', 
+    'metadata_json', 'is_public', 'archived_at'
+  ];
+
+  validKeys.forEach(key => {
+    if (key in itemFields && itemFields[key] !== undefined) {
+      validItemFields[key] = itemFields[key];
+    }
+  });
 
   const { data, error } = await supabase
     .from('items')
     .update({
-      ...itemFields,
+      ...validItemFields,
       updated_at: new Date().toISOString(),
     })
     .eq('id', id)
@@ -179,10 +230,28 @@ export async function unarchiveItem(id: string): Promise<Item> {
 }
 
 // Event Details
-export async function upsertEventDetails(data: EventDetails): Promise<EventDetails> {
+export async function upsertEventDetails(data: Partial<EventDetails> & { item_id: string }): Promise<EventDetails> {
+  // Clean the data to only include valid EventDetails fields
+  const eventData: Partial<EventDetails> & { item_id: string } = {
+    item_id: data.item_id,
+    start_at: data.start_at!,
+    end_at: data.end_at!,
+    all_day: data.all_day ?? false,
+    location_text: data.location_text,
+  };
+
+  // Remove undefined fields
+  Object.keys(eventData).forEach(key => {
+    if (eventData[key as keyof typeof eventData] === undefined) {
+      delete eventData[key as keyof typeof eventData];
+    }
+  });
+
   const { data: result, error } = await supabase
     .from('event_details')
-    .upsert(data)
+    .upsert(eventData, {
+      onConflict: 'item_id'
+    })
     .select()
     .single();
 
@@ -191,10 +260,28 @@ export async function upsertEventDetails(data: EventDetails): Promise<EventDetai
 }
 
 // Reminder Details
-export async function upsertReminderDetails(data: ReminderDetails): Promise<ReminderDetails> {
+export async function upsertReminderDetails(data: Partial<ReminderDetails> & { item_id: string }): Promise<ReminderDetails> {
+  // Clean the data to only include valid ReminderDetails fields
+  const reminderData: Partial<ReminderDetails> & { item_id: string } = {
+    item_id: data.item_id,
+    due_at: data.due_at,
+    completed_at: data.completed_at,
+    estimate_minutes: data.estimate_minutes,
+    has_checklist: data.has_checklist ?? false,
+  };
+
+  // Remove undefined fields
+  Object.keys(reminderData).forEach(key => {
+    if (reminderData[key as keyof typeof reminderData] === undefined) {
+      delete reminderData[key as keyof typeof reminderData];
+    }
+  });
+
   const { data: result, error } = await supabase
     .from('reminder_details')
-    .upsert(data)
+    .upsert(reminderData, {
+      onConflict: 'item_id'
+    })
     .select()
     .single();
 

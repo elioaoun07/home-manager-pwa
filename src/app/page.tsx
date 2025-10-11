@@ -269,7 +269,15 @@ function HomeContent() {
       setEditingItem(null);
     } catch (error) {
       console.error("Error saving item:", error);
-      toast.error(error instanceof Error ? error.message : "Failed to save item");
+      // Log detailed error information
+      if (error && typeof error === 'object') {
+        console.error("Error details:", JSON.stringify(error, null, 2));
+      }
+      const errorMessage = error instanceof Error ? error.message : 
+                          (error && typeof error === 'object' && 'message' in error) ? 
+                          String(error.message) : 
+                          "Failed to save item";
+      toast.error(errorMessage);
     }
   };
 
