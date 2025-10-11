@@ -47,16 +47,15 @@ export async function getItems(filters?: {
     .from('items')
     .select(`
       *,
-      event_details (*),
-      reminder_details (*),
+      event_details!event_details_item_id_fkey (*),
+      reminder_details!reminder_details_item_id_fkey (*),
       subtasks (*),
       recurrence_rules (*),
       alerts (*),
       item_categories (
         category:categories (*)
       )
-    `)
-    .eq('user_id', user.id);
+    `);
 
   // Apply filters
   if (filters?.types && filters.types.length > 0) {
@@ -84,13 +83,18 @@ export async function getItems(filters?: {
   if (error) throw error;
 
   // Transform the data to flatten categories
-  return (data || []).map((item) => ({
-    ...item,
-    categories: item.item_categories?.map((ic: { category: Category }) => ic.category).filter(Boolean) || [],
-    event_details: item.event_details?.[0] || undefined,
-    reminder_details: item.reminder_details?.[0] || undefined,
-    recurrence_rule: item.recurrence_rules?.[0] || undefined,
-  }));
+  const transformed = (data || []).map((item) => {
+    // With explicit FK relationship, event_details/reminder_details come as objects, not arrays
+    return {
+      ...item,
+      categories: item.item_categories?.map((ic: { category: Category }) => ic.category).filter(Boolean) || [],
+      event_details: item.event_details || undefined,
+      reminder_details: item.reminder_details || undefined,
+      recurrence_rule: item.recurrence_rules?.[0] || undefined,
+    };
+  });
+  
+  return transformed;
 }
 
 export async function getItemById(id: string): Promise<ItemWithDetails | null> {
@@ -101,8 +105,8 @@ export async function getItemById(id: string): Promise<ItemWithDetails | null> {
     .from('items')
     .select(`
       *,
-      event_details (*),
-      reminder_details (*),
+      event_details!event_details_item_id_fkey (*),
+      reminder_details!reminder_details_item_id_fkey (*),
       subtasks (*),
       recurrence_rules (*),
       alerts (*),
@@ -120,12 +124,12 @@ export async function getItemById(id: string): Promise<ItemWithDetails | null> {
     throw error;
   }
 
-  // Transform the data
+  // Transform the data (explicit FK returns objects, not arrays)
   return {
     ...data,
     categories: data.item_categories?.map((ic: { category: unknown }) => ic.category).filter(Boolean) || [],
-    event_details: data.event_details?.[0] || undefined,
-    reminder_details: data.reminder_details?.[0] || undefined,
+    event_details: data.event_details || undefined,
+    reminder_details: data.reminder_details || undefined,
     recurrence_rule: data.recurrence_rules?.[0] || undefined,
   };
 }

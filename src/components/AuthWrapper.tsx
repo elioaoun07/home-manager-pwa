@@ -118,6 +118,7 @@ export function AuthWrapper({ children }: AuthWrapperProps) {
                     className="w-full px-4 py-3 glass rounded-xl border border-white/20 dark:border-gray-700/50 bg-white/50 dark:bg-gray-800/50 text-foreground transition-all focus:ring-2 focus:ring-primary/50 focus:border-primary"
                     required
                     placeholder="Your name"
+                    autoComplete="name"
                   />
                 </div>
               )}
@@ -133,6 +134,7 @@ export function AuthWrapper({ children }: AuthWrapperProps) {
                   className="w-full px-4 py-3 glass rounded-xl border border-white/20 dark:border-gray-700/50 bg-white/50 dark:bg-gray-800/50 text-foreground transition-all focus:ring-2 focus:ring-primary/50 focus:border-primary"
                   required
                   placeholder="your@email.com"
+                  autoComplete="email"
                 />
               </div>
 
@@ -148,6 +150,7 @@ export function AuthWrapper({ children }: AuthWrapperProps) {
                   required
                   placeholder="••••••••"
                   minLength={6}
+                  autoComplete={isSignUp ? "new-password" : "current-password"}
                 />
               </div>
 

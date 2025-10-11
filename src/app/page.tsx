@@ -365,7 +365,7 @@ function HomeContent() {
         </main>
 
         <BottomNav currentView={currentView} onViewChange={setCurrentView} />
-        <FAB onClick={handleFABClick} />
+        {!isDrawerOpen && <FAB onClick={handleFABClick} />}
 
         <DrawerContent>
           <div className="px-4 pb-8">

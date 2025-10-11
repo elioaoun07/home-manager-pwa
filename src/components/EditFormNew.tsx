@@ -395,7 +395,6 @@ export function EditFormNew({ item, categories, onSave, onCancel }: EditFormProp
                     whileTap={{ scale: 0.95 }}
                     type="button"
                     onClick={() => {
-                      console.log("Category clicked:", cat.name, "Selected:", !isSelected);
                       if (isSelected) {
                         setSelectedCategories(selectedCategories.filter(id => id !== cat.id));
                       } else {
