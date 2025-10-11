@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Item, ItemWithDetails, ViewType, ParsedInput, ItemStatus } from "@/types";
+import { ItemWithDetails, ViewType, ParsedInput, ItemStatus } from "@/types";
 import { AuthWrapper } from "@/components/AuthWrapper";
 import { QuickAdd } from "@/components/QuickAdd";
 import { TodayView } from "@/components/TodayView";
@@ -13,7 +13,6 @@ import { FAB } from "@/components/FAB";
 import { EditFormNew } from "@/components/EditFormNew";
 import { Drawer, DrawerContent, DrawerTitle, DrawerDescription } from "@/components/ui/drawer";
 import { toast } from "sonner";
-import { supabase } from "@/lib/supabase";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   getItems, 
@@ -80,7 +79,7 @@ function HomeContent() {
       } else {
         setCategories(data);
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error loading categories:", error);
       setCategories([]);
     }
@@ -192,7 +191,12 @@ function HomeContent() {
     }
   };
 
-  const handleSaveEdit = async (data: any) => {
+  const handleSaveEdit = async (data: Partial<ItemWithDetails> & { 
+    categories?: string[]; 
+    subtasks?: Array<{ title: string; order_index: number }>;
+    event_details?: Record<string, unknown>;
+    reminder_details?: Record<string, unknown>;
+  }) => {
     try {
       // Validate event-specific required fields
       if (data.type === "event") {
@@ -216,8 +220,13 @@ function HomeContent() {
           await upsertReminderDetails({ 
             ...data.reminder_details, 
             item_id: editingItem.id,
-            has_checklist: data.subtasks?.length > 0 || false
+            has_checklist: (data.subtasks?.length ?? 0) > 0
           });
+        }
+        
+        // Handle categories for update
+        if (data.categories && data.categories.length > 0) {
+          await setItemCategories(editingItem.id, data.categories);
         }
         
         toast.success("Item updated successfully!");
@@ -235,7 +244,7 @@ function HomeContent() {
           await upsertReminderDetails({ 
             ...data.reminder_details, 
             item_id: newItem.id,
-            has_checklist: data.subtasks?.length > 0 || false
+            has_checklist: (data.subtasks?.length ?? 0) > 0
           });
         }
         
@@ -258,9 +267,9 @@ function HomeContent() {
       await loadItems();
       setIsDrawerOpen(false);
       setEditingItem(null);
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error saving item:", error);
-      toast.error(error.message || "Failed to save item");
+      toast.error(error instanceof Error ? error.message : "Failed to save item");
     }
   };
 

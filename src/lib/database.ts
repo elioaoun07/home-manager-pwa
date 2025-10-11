@@ -15,10 +15,14 @@ export async function createItem(itemData: Partial<Item>): Promise<Item> {
   const user = await getCurrentUser();
   if (!user) throw new Error('User not authenticated');
 
+  // Remove fields that don't belong to the items table
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { categories, subtasks, event_details, reminder_details, ...itemFields } = itemData as Partial<ItemWithDetails>;
+
   const { data, error } = await supabase
     .from('items')
     .insert({
-      ...itemData,
+      ...itemFields,
       user_id: user.id,
       responsible_user_id: user.id,
     })
@@ -80,9 +84,9 @@ export async function getItems(filters?: {
   if (error) throw error;
 
   // Transform the data to flatten categories
-  return (data || []).map((item: any) => ({
+  return (data || []).map((item) => ({
     ...item,
-    categories: item.item_categories?.map((ic: any) => ic.category).filter(Boolean) || [],
+    categories: item.item_categories?.map((ic: { category: Category }) => ic.category).filter(Boolean) || [],
     event_details: item.event_details?.[0] || undefined,
     reminder_details: item.reminder_details?.[0] || undefined,
     recurrence_rule: item.recurrence_rules?.[0] || undefined,
@@ -130,10 +134,14 @@ export async function updateItem(id: string, updates: Partial<Item>): Promise<It
   const user = await getCurrentUser();
   if (!user) throw new Error('User not authenticated');
 
+  // Remove fields that don't belong to the items table
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { categories, subtasks, event_details, reminder_details, ...itemFields } = updates as Partial<ItemWithDetails>;
+
   const { data, error } = await supabase
     .from('items')
     .update({
-      ...updates,
+      ...itemFields,
       updated_at: new Date().toISOString(),
     })
     .eq('id', id)

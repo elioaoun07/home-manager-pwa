@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { ItemWithDetails, ItemType, Priority, ItemStatus, Subtask } from "@/types";
+import { ItemWithDetails, ItemType, Priority, ItemStatus, Subtask, EventDetails, ReminderDetails } from "@/types";
 import { 
   X, Save, Sparkles, Tag, AlertCircle, Calendar, Clock, 
   StickyNote, Globe, Lock, Plus, Trash2, Check 
@@ -11,7 +11,12 @@ import { motion, AnimatePresence } from "framer-motion";
 interface EditFormProps {
   item: ItemWithDetails | null;
   categories: { id: string; name: string; color_hex?: string }[];
-  onSave: (data: any) => Promise<void>;
+  onSave: (data: Partial<ItemWithDetails> & { 
+    categories?: string[]; 
+    subtasks?: Array<{ title: string; order_index: number }>;
+    event_details?: Record<string, unknown>;
+    reminder_details?: Record<string, unknown>;
+  }) => Promise<void>;
   onCancel: () => void;
 }
 
@@ -78,7 +83,7 @@ export function EditFormNew({ item, categories, onSave, onCancel }: EditFormProp
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const data: any = {
+    const data = {
       ...formData,
       categories: selectedCategories,
       subtasks: subtasks.filter(st => st.title?.trim()),
@@ -93,14 +98,14 @@ export function EditFormNew({ item, categories, onSave, onCancel }: EditFormProp
         ? new Date(`${endDate}T23:59:59`)
         : new Date(`${endDate}T${endTime}`);
       
-      data.event_details = {
+      (data as Record<string, unknown>).event_details = {
         start_at: startDateTime.toISOString(),
         end_at: endDateTime.toISOString(),
         all_day: allDay,
         location_text: location || undefined,
       };
     } else if (formData.type === "reminder") {
-      data.reminder_details = {
+      (data as Record<string, unknown>).reminder_details = {
         due_at: dueDate && dueTime 
           ? new Date(`${dueDate}T${dueTime}`).toISOString()
           : undefined,
@@ -109,7 +114,7 @@ export function EditFormNew({ item, categories, onSave, onCancel }: EditFormProp
       };
     }
 
-    await onSave(data);
+    await onSave(data as Parameters<typeof onSave>[0]);
   };
 
   const addSubtask = () => {

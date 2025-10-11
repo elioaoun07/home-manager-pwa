@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { parseQuickAdd } from "@/lib/parser";
 import { ParsedInput } from "@/types";
 import { formatDateTime } from "@/lib/utils";
-import { Bell, Calendar, Check, Tag, AlertTriangle, Repeat, Sparkles, Send, Zap } from "lucide-react";
+import { Bell, Calendar, Tag, AlertTriangle, Repeat, Sparkles, Send, Zap } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface QuickAddProps {

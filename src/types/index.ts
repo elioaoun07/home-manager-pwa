@@ -38,7 +38,7 @@ export interface Item {
   description?: string;
   priority: Priority;
   status?: ItemStatus;
-  metadata_json?: Record<string, any>;
+  metadata_json?: Record<string, unknown>;
   created_at: string;
   updated_at: string;
   archived_at?: string;
@@ -85,7 +85,7 @@ export interface RecurrenceException {
   id: string;
   rule_id: string;
   exdate: string;
-  override_payload_json?: Record<string, any>;
+  override_payload_json?: Record<string, unknown>;
 }
 
 export interface Alert {
