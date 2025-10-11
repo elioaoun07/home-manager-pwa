@@ -1,12 +1,12 @@
 // Quick Add input parser
-import { ParsedInput, ItemType, Priority, Recurrence, RecurrencePreset } from "@/types";
+import { ParsedInput, ItemType, Priority } from "@/types";
 
 export function parseQuickAdd(input: string): ParsedInput {
   let text = input.trim();
   
   // Extract type
   let type: ItemType = "reminder";
-  const typeMatch = text.match(/\/(reminder|todo|event)/i);
+  const typeMatch = text.match(/\/(reminder|event)/i);
   if (typeMatch) {
     type = typeMatch[1].toLowerCase() as ItemType;
     text = text.replace(typeMatch[0], "").trim();
@@ -29,42 +29,38 @@ export function parseQuickAdd(input: string): ParsedInput {
   }
   
   // Extract recurrence
-  let recurrence: Recurrence | undefined;
+  let recurrence: string | undefined;
   const recurrencePatterns = [
-    { pattern: /every\s+day|daily/i, preset: "daily" as RecurrencePreset },
-    { pattern: /every\s+week|weekly/i, preset: "weekly" as RecurrencePreset },
-    { pattern: /every\s+month|monthly/i, preset: "monthly" as RecurrencePreset },
-    { pattern: /every\s+year|yearly/i, preset: "yearly" as RecurrencePreset },
-    { pattern: /every\s+(Mon|Tue|Wed|Thu|Fri|Sat|Sun)/i, preset: "weekly" as RecurrencePreset, weekday: true },
+    { pattern: /every\s+day|daily/i, rrule: "FREQ=DAILY" },
+    { pattern: /every\s+week|weekly/i, rrule: "FREQ=WEEKLY" },
+    { pattern: /every\s+month|monthly/i, rrule: "FREQ=MONTHLY" },
+    { pattern: /every\s+year|yearly/i, rrule: "FREQ=YEARLY" },
+    { pattern: /every\s+(Mon|Tue|Wed|Thu|Fri|Sat|Sun)/i, rrule: "FREQ=WEEKLY", weekday: true },
     { pattern: /every\s+(\d+)\s+(day|week|month|year)s?/i, custom: true },
   ];
   
-  for (const { pattern, preset, weekday, custom } of recurrencePatterns) {
+  for (const { pattern, rrule, weekday, custom } of recurrencePatterns) {
     const match = text.match(pattern);
     if (match) {
       if (weekday && match[1]) {
-        recurrence = {
-          preset: "weekly",
-          custom: {
-            interval: 1,
-            byWeekday: [match[1]],
-          },
+        // Map day names to RRULE format
+        const dayMap: Record<string, string> = {
+          Mon: "MO", Tue: "TU", Wed: "WE", Thu: "TH", 
+          Fri: "FR", Sat: "SA", Sun: "SU"
         };
+        recurrence = `FREQ=WEEKLY;BYDAY=${dayMap[match[1]]}`;
       } else if (custom && match[1] && match[2]) {
         const interval = parseInt(match[1]);
         const unit = match[2].toLowerCase();
-        const presetMap: Record<string, RecurrencePreset> = {
-          day: "daily",
-          week: "weekly",
-          month: "monthly",
-          year: "yearly",
+        const freqMap: Record<string, string> = {
+          day: "DAILY",
+          week: "WEEKLY",
+          month: "MONTHLY",
+          year: "YEARLY",
         };
-        recurrence = {
-          preset: presetMap[unit] || "daily",
-          custom: { interval },
-        };
-      } else if (preset) {
-        recurrence = { preset };
+        recurrence = `FREQ=${freqMap[unit]};INTERVAL=${interval}`;
+      } else if (rrule) {
+        recurrence = rrule;
       }
       text = text.replace(match[0], "").trim();
       break;

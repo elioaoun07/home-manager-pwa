@@ -39,13 +39,11 @@ export function QuickAdd({ onAdd }: QuickAddProps) {
 
   const typeIcon = {
     reminder: <Bell size={16} className="text-info" />,
-    todo: <Check size={16} className="text-success" />,
     event: <Calendar size={16} className="text-primary" />,
   };
 
   const typeBadge = {
     reminder: "bg-info/10 text-info border-info/20",
-    todo: "bg-success/10 text-success border-success/20",
     event: "bg-primary/10 text-primary border-primary/20",
   };
 
@@ -176,14 +174,14 @@ export function QuickAdd({ onAdd }: QuickAddProps) {
                   </motion.div>
                 )}
                 
-                {preview.recurrence && preview.recurrence.preset !== "none" && (
+                {preview.recurrence && (
                   <motion.div
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     transition={{ delay: 0.35, type: "spring", stiffness: 500 }}
                     className="flex items-center gap-1 px-2 py-1 rounded-lg bg-primary/10 text-primary border border-primary/20 text-xs font-medium"
                   >
-                    <Repeat size={12} /> {preview.recurrence.preset}
+                    <Repeat size={12} /> recurring
                   </motion.div>
                 )}
               </div>
@@ -198,7 +196,7 @@ export function QuickAdd({ onAdd }: QuickAddProps) {
           className="mt-2 flex items-center gap-2 text-xs text-muted-foreground"
         >
           <Zap size={12} className="text-primary" />
-          <span>Try: <span className="font-mono text-foreground/70">#work !high tomorrow 5pm /todo</span></span>
+          <span>Try: <span className="font-mono text-foreground/70">#work !high tomorrow 5pm /reminder</span></span>
         </motion.div>
       </div>
     </motion.div>

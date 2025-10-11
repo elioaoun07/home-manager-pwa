@@ -1,15 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { Item, Priority } from "@/types";
+import { ItemWithDetails, Priority } from "@/types";
 import { ItemCard } from "./ItemCard";
 import { AnimatePresence, motion } from "framer-motion";
 import { Filter, Tag, AlertCircle, X } from "lucide-react";
 
 interface CategoriesViewProps {
-  items: Item[];
+  items: ItemWithDetails[];
   onToggleComplete: (id: string) => void;
-  onEdit: (item: Item) => void;
+  onEdit: (item: ItemWithDetails) => void;
   onDelete: (id: string) => void;
 }
 
@@ -19,7 +19,7 @@ export function CategoriesView({ items, onToggleComplete, onEdit, onDelete }: Ca
 
   // Get all unique categories
   const allCategories = Array.from(
-    new Set(items.flatMap((item) => item.categories))
+    new Set(items.flatMap((item) => item.categories?.map(c => c.name) || []))
   ).sort();
 
   const toggleCategory = (category: string) => {
@@ -42,7 +42,7 @@ export function CategoriesView({ items, onToggleComplete, onEdit, onDelete }: Ca
   const filteredItems = items.filter((item) => {
     const matchesCategory =
       selectedCategories.length === 0 ||
-      item.categories.some((cat) => selectedCategories.includes(cat));
+      (item.categories && item.categories.some((cat) => selectedCategories.includes(cat.name)));
 
     const matchesPriority =
       selectedPriorities.length === 0 ||
@@ -131,7 +131,7 @@ export function CategoriesView({ items, onToggleComplete, onEdit, onDelete }: Ca
               allCategories.map((category, index) => {
                 const isSelected = selectedCategories.includes(category);
                 const itemCount = items.filter(item => 
-                  item.categories.includes(category)
+                  item.categories?.some(c => c.name === category)
                 ).length;
 
                 return (
