@@ -94,7 +94,7 @@ export async function getItems(filters?: {
     
     // Build a map of item_id -> categories[]
     if (itemCategoriesData) {
-      itemCategoriesData.forEach((ic: any) => {
+      itemCategoriesData.forEach((ic: { item_id: string; category: Category | Category[] }) => {
         if (!itemCategoriesMap[ic.item_id]) {
           itemCategoriesMap[ic.item_id] = [];
         }
@@ -154,7 +154,7 @@ export async function getItemById(id: string): Promise<ItemWithDetails | null> {
 
   const categories: Category[] = [];
   if (itemCategoriesData) {
-    itemCategoriesData.forEach((ic: any) => {
+    itemCategoriesData.forEach((ic: { category: Category | Category[] }) => {
       const category = Array.isArray(ic.category) ? ic.category[0] : ic.category;
       if (category) {
         categories.push(category);
@@ -178,7 +178,7 @@ export async function updateItem(id: string, updates: Partial<Item>): Promise<It
 
   // Remove fields that don't belong to the items table
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { categories, subtasks, event_details, reminder_details, item_categories, recurrence_rule, recurrence_rules, ...itemFields } = updates as any;
+  const { categories, subtasks, event_details, reminder_details, recurrence_rule, ...itemFields } = updates as Partial<ItemWithDetails>;
 
   // Only include valid Item table fields
   const validItemFields: Partial<Item> = {};
@@ -188,8 +188,8 @@ export async function updateItem(id: string, updates: Partial<Item>): Promise<It
   ];
 
   validKeys.forEach(key => {
-    if (key in itemFields && itemFields[key] !== undefined) {
-      validItemFields[key] = itemFields[key];
+    if (key in itemFields && itemFields[key as keyof typeof itemFields] !== undefined) {
+      (validItemFields as Record<string, unknown>)[key] = itemFields[key as keyof typeof itemFields];
     }
   });
 

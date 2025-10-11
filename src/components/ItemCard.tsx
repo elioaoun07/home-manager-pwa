@@ -122,12 +122,23 @@ export function ItemCard({ item, onToggleComplete, onEdit, onDelete }: ItemCardP
             {/* Categories under title */}
             {item.categories && item.categories.length > 0 && (
               <div className="flex flex-wrap items-center gap-1 mb-2">
-                {item.categories.map(c => (
-                  <span key={c.id} className="text-xs px-2 py-0.5 rounded-full bg-green-50 text-green-700 flex items-center gap-1">
-                    <Tag size={10} />
-                    {c.name}
-                  </span>
-                ))}
+                {item.categories.map(c => {
+                  const bgColor = c.color_hex ? `${c.color_hex}20` : '#22c55e20'; // 20 = 12.5% opacity
+                  const textColor = c.color_hex || '#16a34a';
+                  return (
+                    <span 
+                      key={c.id} 
+                      className="text-xs px-2 py-0.5 rounded-full flex items-center gap-1"
+                      style={{ 
+                        backgroundColor: bgColor,
+                        color: textColor
+                      }}
+                    >
+                      <Tag size={10} />
+                      {c.name}
+                    </span>
+                  );
+                })}
               </div>
             )}
             

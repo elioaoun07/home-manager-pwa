@@ -8,8 +8,6 @@ export function formatRelativeTime(date: Date): string {
   const diff = date.getTime() - now.getTime();
   const absDiff = Math.abs(diff);
   
-  const minutes = Math.floor(absDiff / 60000);
-  const hours = Math.floor(absDiff / 3600000);
   const days = Math.floor(absDiff / 86400000);
   const weeks = Math.floor(absDiff / (86400000 * 7));
   
