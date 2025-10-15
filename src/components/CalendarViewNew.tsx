@@ -78,7 +78,6 @@ export function CalendarViewNew({ items, onToggleComplete, onEdit, onDelete, cat
     
     if (viewMode === "month") {
       const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
-      const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
       const startDate = new Date(firstDay);
       startDate.setDate(startDate.getDate() - firstDay.getDay()); // Start from Sunday
       

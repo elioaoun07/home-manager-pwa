@@ -3,7 +3,7 @@
 import { ItemWithDetails } from "@/types";
 import { ItemCard } from "./ItemCard";
 import { isOverdue, isSameDay, getTimeOfDay, getItemDate } from "@/lib/utils";
-import { Sun, Sunset, Moon, AlertTriangle, Sparkles, Trophy, ChevronDown, ChevronUp } from "lucide-react";
+import { Sun, Sunset, Moon, AlertTriangle, Sparkles, Trophy, ChevronDown } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useState } from "react";
 
