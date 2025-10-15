@@ -1,7 +1,7 @@
 "use client";
 
 import { ViewType } from "@/types";
-import { Calendar, Filter, ListTodo, Sparkles } from "lucide-react";
+import { Calendar, ListTodo, Sparkles, StickyNote } from "lucide-react";
 import { motion } from "framer-motion";
 
 interface BottomNavProps {
@@ -13,8 +13,8 @@ export function BottomNav({ currentView, onViewChange }: BottomNavProps) {
   const navItems: { view: ViewType; label: string; icon: React.ElementType }[] = [
     { view: "today", label: "Today", icon: Sparkles },
     { view: "upcoming", label: "Upcoming", icon: ListTodo },
+    { view: "notes", label: "Notes", icon: StickyNote },
     { view: "calendar", label: "Calendar", icon: Calendar },
-    { view: "categories", label: "Filters", icon: Filter },
   ];
 
   return (

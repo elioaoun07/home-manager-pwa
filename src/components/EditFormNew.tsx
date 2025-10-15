@@ -73,7 +73,26 @@ export function EditFormNew({ item, categories, onSave, onCancel }: EditFormProp
         setEstimateMinutes(item.reminder_details.estimate_minutes);
       }
     } else {
-      // New item - select first category (Personal) by default
+      // New item - auto-populate with defaults
+      const today = new Date();
+      const todayStr = today.toISOString().split('T')[0];
+      const currentTime = today.toTimeString().slice(0, 5);
+      
+      // Auto-populate reminder due date to today
+      setDueDate(todayStr);
+      setDueTime(currentTime);
+      
+      // Auto-populate event dates (today to tomorrow)
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const tomorrowStr = tomorrow.toISOString().split('T')[0];
+      
+      setStartDate(todayStr);
+      setStartTime(currentTime);
+      setEndDate(tomorrowStr);
+      setEndTime(currentTime);
+      
+      // Select first category (Personal) by default
       if (categories.length > 0) {
         setSelectedCategories([categories[0].id]);
       }
@@ -429,10 +448,26 @@ export function EditFormNew({ item, categories, onSave, onCancel }: EditFormProp
             transition={{ delay: 0.4 }}
             className="mb-6 p-4 glass rounded-xl border border-white/20 dark:border-gray-700/50"
           >
-            <h3 className="text-sm font-semibold text-muted-foreground mb-4 flex items-center gap-2">
-              <Calendar className="w-4 h-4 text-primary" />
-              Event Details
-            </h3>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-semibold text-muted-foreground flex items-center gap-2">
+                <Calendar className="w-4 h-4 text-primary" />
+                Event Details
+              </h3>
+              <button
+                type="button"
+                onClick={() => {
+                  setStartDate("");
+                  setStartTime("");
+                  setEndDate("");
+                  setEndTime("");
+                  setLocation("");
+                }}
+                className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
+                title="Clear all dates and times"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
             
             <div className="mb-4">
               <label className="flex items-center gap-2 cursor-pointer">
@@ -517,10 +552,23 @@ export function EditFormNew({ item, categories, onSave, onCancel }: EditFormProp
             transition={{ delay: 0.4 }}
             className="mb-6 p-4 glass rounded-xl border border-white/20 dark:border-gray-700/50"
           >
-            <h3 className="text-sm font-semibold text-muted-foreground mb-4 flex items-center gap-2">
-              <Clock className="w-4 h-4 text-primary" />
-              Reminder Details
-            </h3>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-semibold text-muted-foreground flex items-center gap-2">
+                <Clock className="w-4 h-4 text-primary" />
+                Reminder Details
+              </h3>
+              <button
+                type="button"
+                onClick={() => {
+                  setDueDate("");
+                  setDueTime("");
+                }}
+                className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
+                title="Clear date and time"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
             
             <div className="grid grid-cols-2 gap-3 mb-3">
               <div>

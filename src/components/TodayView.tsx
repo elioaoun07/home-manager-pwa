@@ -3,8 +3,9 @@
 import { ItemWithDetails } from "@/types";
 import { ItemCard } from "./ItemCard";
 import { isOverdue, isSameDay, getTimeOfDay, getItemDate } from "@/lib/utils";
-import { Sun, Sunset, Moon, AlertTriangle, Sparkles, Trophy } from "lucide-react";
+import { Sun, Sunset, Moon, AlertTriangle, Sparkles, Trophy, ChevronDown, ChevronUp } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
+import { useState } from "react";
 
 interface TodayViewProps {
   items: ItemWithDetails[];
@@ -15,6 +16,21 @@ interface TodayViewProps {
 
 export function TodayView({ items, onToggleComplete, onEdit, onDelete }: TodayViewProps) {
   const today = new Date();
+  
+  // State for collapsible sections
+  const [collapsedSections, setCollapsedSections] = useState<Set<string>>(new Set());
+
+  const toggleSection = (sectionName: string) => {
+    setCollapsedSections(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(sectionName)) {
+        newSet.delete(sectionName);
+      } else {
+        newSet.add(sectionName);
+      }
+      return newSet;
+    });
+  };
   
   const todayItems = items.filter((item) => {
     const itemDate = getItemDate(item);
@@ -51,6 +67,9 @@ export function TodayView({ items, onToggleComplete, onEdit, onDelete }: TodayVi
   ) => {
     if (sectionItems.length === 0) return null;
 
+    const sectionKey = title.toLowerCase().replace(/\s+/g, '-');
+    const isCollapsed = collapsedSections.has(sectionKey);
+
     return (
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -58,11 +77,13 @@ export function TodayView({ items, onToggleComplete, onEdit, onDelete }: TodayVi
         transition={{ duration: 0.4 }}
         className="mb-8"
       >
-        <motion.div
+        <motion.button
+          onClick={() => toggleSection(sectionKey)}
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           className={`
-            flex items-center gap-3 mb-4 px-4 py-3 rounded-2xl
+            w-full flex items-center gap-3 mb-4 px-4 py-3 rounded-2xl
+            transition-all hover:scale-[1.02] cursor-pointer
             ${highlight 
               ? 'glass-strong border border-destructive/30 shadow-lg' 
               : 'glass border border-white/10 dark:border-gray-700/50'
@@ -80,7 +101,7 @@ export function TodayView({ items, onToggleComplete, onEdit, onDelete }: TodayVi
             {icon}
           </motion.div>
           
-          <div className="flex-1">
+          <div className="flex-1 text-left">
             <h2 className={`
               text-base font-bold uppercase tracking-wider
               ${highlight ? "text-destructive" : "text-foreground"}
@@ -91,6 +112,14 @@ export function TodayView({ items, onToggleComplete, onEdit, onDelete }: TodayVi
               {sectionItems.length} {sectionItems.length === 1 ? 'item' : 'items'}
             </p>
           </div>
+
+          {/* Collapse/Expand Icon */}
+          <motion.div
+            animate={{ rotate: isCollapsed ? 0 : 180 }}
+            transition={{ duration: 0.3 }}
+          >
+            <ChevronDown size={20} className="text-muted-foreground" />
+          </motion.div>
 
           <motion.div
             animate={{ rotate: [0, 10, -10, 0] }}
@@ -105,15 +134,23 @@ export function TodayView({ items, onToggleComplete, onEdit, onDelete }: TodayVi
           >
             {sectionItems.length}
           </motion.div>
-        </motion.div>
+        </motion.button>
 
-        <div className="space-y-0">
-          <AnimatePresence mode="popLayout">
-            {sectionItems.map((item, index) => (
-              <motion.div
-                key={item.id}
-                initial={{ opacity: 0, x: -50 }}
-                animate={{ opacity: 1, x: 0 }}
+        <AnimatePresence>
+          {!isCollapsed && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.3 }}
+              className="space-y-0 overflow-hidden"
+            >
+              <AnimatePresence mode="popLayout">
+                {sectionItems.map((item, index) => (
+                  <motion.div
+                    key={item.id}
+                    initial={{ opacity: 0, x: -50 }}
+                    animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 50 }}
                 transition={{ 
                   delay: index * 0.05,
@@ -125,13 +162,16 @@ export function TodayView({ items, onToggleComplete, onEdit, onDelete }: TodayVi
                 <ItemCard
                   item={item}
                   onToggleComplete={onToggleComplete}
+                  onView={onEdit}
                   onEdit={onEdit}
                   onDelete={onDelete}
                 />
               </motion.div>
             ))}
           </AnimatePresence>
-        </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </motion.div>
     );
   };

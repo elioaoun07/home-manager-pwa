@@ -6,11 +6,12 @@ import { AuthWrapper } from "@/components/AuthWrapper";
 import { QuickAdd } from "@/components/QuickAdd";
 import { TodayView } from "@/components/TodayView";
 import { UpcomingView } from "@/components/UpcomingView";
-import { CalendarView } from "@/components/CalendarView";
-import { CategoriesView } from "@/components/CategoriesView";
+import { CalendarViewNew } from "@/components/CalendarViewNew";
+import { NotesView } from "@/components/NotesView";
 import { BottomNav } from "@/components/BottomNav";
 import { FAB } from "@/components/FAB";
 import { EditFormNew } from "@/components/EditFormNew";
+import { ViewDetails } from "@/components/ViewDetails";
 import { Drawer, DrawerContent, DrawerTitle, DrawerDescription } from "@/components/ui/drawer";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
@@ -32,7 +33,9 @@ function HomeContent() {
   const [categories, setCategories] = useState<{ id: string; name: string; color_hex?: string }[]>([]);
   const [currentView, setCurrentView] = useState<ViewType>("today");
   const [editingItem, setEditingItem] = useState<ItemWithDetails | null>(null);
+  const [viewingItem, setViewingItem] = useState<ItemWithDetails | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isViewDetailsOpen, setIsViewDetailsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   // Load items from database
@@ -169,6 +172,11 @@ function HomeContent() {
   const handleEdit = (item: ItemWithDetails) => {
     setEditingItem(item);
     setIsDrawerOpen(true);
+  };
+
+  const handleView = (item: ItemWithDetails) => {
+    setViewingItem(item);
+    setIsViewDetailsOpen(true);
   };
 
   const handleDelete = async (id: string) => {
@@ -321,7 +329,7 @@ function HomeContent() {
         <div className="fixed inset-0 gradient-mesh opacity-30 pointer-events-none" />
         <div className="fixed inset-0 bg-[radial-gradient(circle_at_50%_120%,hsl(var(--primary)/0.1),transparent_50%)] pointer-events-none" />
 
-        <QuickAdd onAdd={handleQuickAdd} />
+        <QuickAdd onAdd={handleQuickAdd} categories={categories} />
 
         <main className="relative max-w-2xl mx-auto px-4 pt-4">
           <AnimatePresence mode="wait">
@@ -336,7 +344,7 @@ function HomeContent() {
                 <TodayView
                   items={items}
                   onToggleComplete={handleToggleComplete}
-                  onEdit={handleEdit}
+                  onEdit={handleView}
                   onDelete={handleDelete}
                 />
               )}
@@ -346,26 +354,27 @@ function HomeContent() {
                   items={items}
                   days={30}
                   onToggleComplete={handleToggleComplete}
-                  onEdit={handleEdit}
+                  onEdit={handleView}
+                  onDelete={handleDelete}
+                />
+              )}
+
+              {currentView === "notes" && (
+                <NotesView
+                  items={items}
+                  onToggleComplete={handleToggleComplete}
+                  onEdit={handleView}
                   onDelete={handleDelete}
                 />
               )}
 
               {currentView === "calendar" && (
-                <CalendarView
+                <CalendarViewNew
                   items={items}
                   onToggleComplete={handleToggleComplete}
-                  onEdit={handleEdit}
+                  onEdit={handleView}
                   onDelete={handleDelete}
-                />
-              )}
-
-              {currentView === "categories" && (
-                <CategoriesView
-                  items={items}
-                  onToggleComplete={handleToggleComplete}
-                  onEdit={handleEdit}
-                  onDelete={handleDelete}
+                  categories={categories}
                 />
               )}
             </motion.div>
@@ -375,6 +384,20 @@ function HomeContent() {
         <BottomNav currentView={currentView} onViewChange={setCurrentView} />
         {!isDrawerOpen && <FAB onClick={handleFABClick} />}
 
+        {/* View Details Drawer */}
+        <ViewDetails
+          item={viewingItem}
+          isOpen={isViewDetailsOpen}
+          onClose={() => {
+            setIsViewDetailsOpen(false);
+            setViewingItem(null);
+          }}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+          onToggleComplete={handleToggleComplete}
+        />
+
+        {/* Edit Drawer */}
         <DrawerContent>
           <div className="px-4 pb-8">
             <DrawerTitle className="text-xl font-bold mb-4">

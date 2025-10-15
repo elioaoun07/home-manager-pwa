@@ -8,11 +8,12 @@ import { useEffect, useState } from "react";
 interface ItemCardProps {
   item: ItemWithDetails;
   onToggleComplete: (id: string) => void;
+  onView: (item: ItemWithDetails) => void;
   onEdit: (item: ItemWithDetails) => void;
   onDelete: (id: string) => void;
 }
 
-export function ItemCard({ item, onToggleComplete, onEdit, onDelete }: ItemCardProps) {
+export function ItemCard({ item, onToggleComplete, onView, onEdit, onDelete }: ItemCardProps) {
   const [timeLeft, setTimeLeft] = useState<string>("");
 
   const getItemDate = (): Date | null => {
@@ -97,12 +98,27 @@ export function ItemCard({ item, onToggleComplete, onEdit, onDelete }: ItemCardP
 
   const urgencyConfig = getUrgencyConfig();
 
+  // Get primary category color
+  const categoryColor = item.categories?.[0]?.color_hex || '#6366f1';
+
   return (
-    <div className={`mb-3 p-4 rounded-xl border bg-card shadow-sm hover:shadow-md transition-shadow ${isOverdue ? 'animate-pulse-red' : ''}`}>
+    <div 
+      onClick={() => onView(item)}
+      className={`mb-3 p-4 rounded-xl border bg-card shadow-sm hover:shadow-md transition-all cursor-pointer ${isOverdue ? 'animate-pulse-red' : ''}`}
+      style={{ 
+        borderLeftWidth: '4px',
+        borderLeftColor: categoryColor
+      }}
+    >
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-start gap-3 flex-1 min-w-0">
-          <div className={`flex-shrink-0 p-2 rounded-lg ${config.bgColor}`}>
-            <Icon size={20} className={config.color} />
+          <div 
+            className="flex-shrink-0 p-2 rounded-lg"
+            style={{ 
+              backgroundColor: `${categoryColor}20`,
+            }}
+          >
+            <Icon size={20} style={{ color: categoryColor }} />
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
@@ -173,11 +189,14 @@ export function ItemCard({ item, onToggleComplete, onEdit, onDelete }: ItemCardP
             {/* Bottom action buttons */}
             <div className="flex items-center justify-between mt-3 pt-3 border-t">
               <div className="flex items-center gap-2">
-                {item.type === "reminder" && (
-                  <button onClick={() => onToggleComplete(item.id)}>
-                    {isCompleted ? <CheckCircle2 size={22} className="text-green-600" /> : <Circle size={22} className="text-gray-400 hover:text-green-600" />}
-                  </button>
-                )}
+                <button 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onToggleComplete(item.id);
+                  }}
+                >
+                  {isCompleted ? <CheckCircle2 size={22} className="text-green-600" /> : <Circle size={22} className="text-gray-400 hover:text-green-600" />}
+                </button>
               </div>
             </div>
           </div>
@@ -188,7 +207,10 @@ export function ItemCard({ item, onToggleComplete, onEdit, onDelete }: ItemCardP
           {/* Map icon at top */}
           {item.event_details?.location_text && (
             <button
-              onClick={handleLocationClick}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleLocationClick();
+              }}
               className="p-2 rounded-lg bg-blue-50 hover:bg-blue-100 transition-colors"
               title="Open in Google Maps"
             >
@@ -199,14 +221,20 @@ export function ItemCard({ item, onToggleComplete, onEdit, onDelete }: ItemCardP
           {/* Edit/Delete buttons at bottom */}
           <div className="flex items-center gap-2 mt-auto">
             <button 
-              onClick={() => onEdit(item)} 
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit(item);
+              }}
               className="p-2 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
               title="Edit"
             >
               <Edit size={16} />
             </button>
             <button 
-              onClick={() => onDelete(item.id)} 
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete(item.id);
+              }}
               className="p-2 rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors"
               title="Delete"
             >

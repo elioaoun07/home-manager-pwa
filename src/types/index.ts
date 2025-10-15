@@ -138,7 +138,7 @@ export interface ParsedInput {
   isPublic?: boolean;
 }
 
-export type ViewType = "today" | "upcoming" | "calendar" | "categories";
+export type ViewType = "today" | "upcoming" | "notes" | "calendar";
 
 export interface FilterState {
   categories: string[];

@@ -52,7 +52,7 @@ export function UpcomingView({ items, days, onToggleComplete, onEdit, onDelete }
   };
 
   return (
-    <div className="pb-20">
+    <div className="pb-24">
       {/* Header Card */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -183,6 +183,7 @@ export function UpcomingView({ items, days, onToggleComplete, onEdit, onDelete }
                     <ItemCard
                       item={item}
                       onToggleComplete={onToggleComplete}
+                      onView={onEdit}
                       onEdit={onEdit}
                       onDelete={onDelete}
                     />
