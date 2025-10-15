@@ -11,9 +11,10 @@ interface CategoriesViewProps {
   onToggleComplete: (id: string) => void;
   onEdit: (item: ItemWithDetails) => void;
   onDelete: (id: string) => void;
+  onView: (item: ItemWithDetails) => void;
 }
 
-export function CategoriesView({ items, onToggleComplete, onEdit, onDelete }: CategoriesViewProps) {
+export function CategoriesView({ items, onToggleComplete, onEdit, onDelete, onView }: CategoriesViewProps) {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedPriorities, setSelectedPriorities] = useState<Priority[]>([]);
 
@@ -261,6 +262,7 @@ export function CategoriesView({ items, onToggleComplete, onEdit, onDelete }: Ca
                 <ItemCard
                   item={item}
                   onToggleComplete={onToggleComplete}
+                  onView={onView}
                   onEdit={onEdit}
                   onDelete={onDelete}
                 />

@@ -12,9 +12,10 @@ interface UpcomingViewProps {
   onToggleComplete: (id: string) => void;
   onEdit: (item: ItemWithDetails) => void;
   onDelete: (id: string) => void;
+  onView: (item: ItemWithDetails) => void;
 }
 
-export function UpcomingView({ items, days, onToggleComplete, onEdit, onDelete }: UpcomingViewProps) {
+export function UpcomingView({ items, days, onToggleComplete, onEdit, onDelete, onView }: UpcomingViewProps) {
   const now = new Date();
   const endDate = new Date(now.getTime() + days * 24 * 60 * 60 * 1000);
 

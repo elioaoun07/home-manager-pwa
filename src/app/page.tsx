@@ -354,6 +354,7 @@ function HomeContent() {
                   items={items}
                   days={30}
                   onToggleComplete={handleToggleComplete}
+                  onView={handleView}
                   onEdit={handleView}
                   onDelete={handleDelete}
                 />
@@ -363,6 +364,7 @@ function HomeContent() {
                 <NotesView
                   items={items}
                   onToggleComplete={handleToggleComplete}
+                  onView={handleView}
                   onEdit={handleView}
                   onDelete={handleDelete}
                 />

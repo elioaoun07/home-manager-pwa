@@ -10,9 +10,10 @@ interface NotesViewProps {
   onToggleComplete: (id: string) => void;
   onEdit: (item: ItemWithDetails) => void;
   onDelete: (id: string) => void;
+  onView: (item: ItemWithDetails) => void;
 }
 
-export function NotesView({ items, onToggleComplete, onEdit, onDelete }: NotesViewProps) {
+export function NotesView({ items, onToggleComplete, onEdit, onDelete, onView }: NotesViewProps) {
   // Filter for notes: reminders without a due_at date
   const notes = items.filter(item => 
     item.type === "reminder" && !item.reminder_details?.due_at
