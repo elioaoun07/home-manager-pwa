@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { ItemWithDetails, ViewType, ParsedInput, ItemStatus } from "@/types";
 import { AuthWrapper } from "@/components/AuthWrapper";
 import { QuickAdd } from "@/components/QuickAdd";
@@ -28,6 +28,7 @@ import {
   getCategories,
   createCategory
 } from "@/lib/database";
+import { enhanceCategoriesWithKeywords } from "@/config/categoryKeywords";
 
 function HomeContent() {
   const [items, setItems] = useState<ItemWithDetails[]>([]);
@@ -101,6 +102,11 @@ function HomeContent() {
       setViewDensity(savedDensity);
     }
   }, []);
+
+  // Enhance categories with keywords for smart parsing
+  const enhancedCategories = useMemo(() => {
+    return enhanceCategoriesWithKeywords(categories);
+  }, [categories]);
 
   const handleQuickAdd = async (parsed: ParsedInput) => {
     try {
@@ -340,7 +346,7 @@ function HomeContent() {
 
         <QuickAdd 
           onAdd={handleQuickAdd} 
-          categories={categories}
+          categories={enhancedCategories}
           onOpenSettings={() => setIsSettingsSidebarOpen(true)}
         />
 
