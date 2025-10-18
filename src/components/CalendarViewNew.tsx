@@ -345,15 +345,15 @@ export function CalendarViewNew({ items, onToggleComplete, onEdit, onDelete, cat
         {viewMode === "month" ? (
           <>
             {/* Day headers */}
-            <div className="grid grid-cols-7 gap-1 mb-2">
+            <div className="grid grid-cols-7 gap-1.5 mb-2">
               {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(day => (
-                <div key={day} className="text-center text-xs font-medium text-muted-foreground py-2">
+                <div key={day} className="text-center text-xs font-medium text-muted-foreground py-1.5">
                   {day}
                 </div>
               ))}
             </div>
-            {/* Month grid */}
-            <div className="grid grid-cols-7 gap-1 mb-4">
+            {/* Month grid - Optimized for mobile */}
+            <div className="grid grid-cols-7 gap-1.5 mb-4">
               {dates.map((date, index) => {
                 const dayItems = getItemsForDate(date);
                 const isCurrentMonth = date.getMonth() === currentDate.getMonth();
@@ -382,7 +382,7 @@ export function CalendarViewNew({ items, onToggleComplete, onEdit, onDelete, cat
                         : 'bg-muted/30 border-transparent text-muted-foreground'
                     }`}
                   >
-                    <div className={`text-sm font-medium mb-1 ${isToday(date) || isSelected ? 'text-primary' : ''}`}>
+                    <div className={`text-sm font-semibold mb-1 ${isToday(date) || isSelected ? 'text-primary' : ''}`}>
                       {date.getDate()}
                     </div>
                     {dayItems.length > 0 && (

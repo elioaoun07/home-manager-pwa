@@ -103,90 +103,111 @@ export function ItemCard({ item, onToggleComplete, onView, onEdit, onDelete, vie
   const categoryColor = item.categories?.[0]?.color_hex || '#6366f1';
 
   if (viewDensity === "compact") {
+    // Calculate if due soon (< 24 hours)
+    const isDueSoon = itemDate && !isCompleted && !isOverdue && 
+      (itemDate.getTime() - new Date().getTime()) < 24 * 60 * 60 * 1000;
+
+    // Determine background and border colors based on public/private (from images)
+    const publicPrivateStyles = item.is_public 
+      ? { bg: 'bg-blue-500', text: 'text-blue-700', borderColor: '#3b82f6' } // Blue for public
+      : { bg: 'bg-purple-600', text: 'text-purple-700', borderColor: '#9333ea' }; // Purple for private
+
+    const totalCategories = item.categories?.length || 0;
+
     return (
       <div
         onClick={() => onView(item)}
-        className={`mb-1 px-2 py-1.5 rounded-md border-2 bg-card cursor-pointer ${
-          isOverdue ? 'border-destructive bg-destructive/5' : item.is_public ? 'border-green-400' : 'border-blue-400'
-        }`}
+        className="mb-2 p-3 rounded-xl border shadow-sm hover:shadow-md transition-shadow cursor-pointer border-l-[4px] bg-white dark:bg-gray-900"
         style={{
-          borderLeftWidth: '4px',
-          borderLeftColor: categoryColor,
+          borderLeftColor: publicPrivateStyles.borderColor,
         }}
       >
-        {/* Row 1: Checkbox + Title + Urgency */}
-        <div className="flex items-start gap-1.5 mb-1">
+        {/* Row 1: Checkbox + Title (max 2 lines) + Urgency */}
+        <div className="flex items-start gap-2.5 mb-2">
           <button
             onClick={(e) => {
               e.stopPropagation();
               onToggleComplete(item.id);
             }}
-            className="flex-shrink-0 mt-0.5"
+            className="flex-shrink-0 min-w-[44px] min-h-[44px] -m-2.5 p-2.5 flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded"
             aria-label={isCompleted ? "Mark as incomplete" : "Mark as complete"}
           >
             {isCompleted ? (
-              <CheckCircle2 size={16} className="text-green-600" />
+              <CheckCircle2 size={20} className="text-green-600" />
             ) : (
-              <Circle size={16} className="text-gray-400" />
+              <Circle size={20} className="text-gray-400" />
             )}
           </button>
           
           <h3
-            className={`text-sm font-semibold flex-1 leading-tight ${
+            className={`text-base font-medium flex-1 line-clamp-2 leading-snug ${
               isCompleted ? 'line-through text-muted-foreground' : 'text-foreground'
             }`}
           >
             {item.title}
           </h3>
 
-          {urgencyConfig && (
-            <span
-              className={`w-3.5 h-3.5 rounded-full bg-gradient-to-br ${urgencyConfig.gradient} flex items-center justify-center flex-shrink-0 mt-0.5`}
-            >
-              <Flame size={8} className="text-white" strokeWidth={3} />
-            </span>
+          {!isCompleted && urgencyConfig && (
+            <div className={`p-1 rounded-lg bg-gradient-to-br ${urgencyConfig.gradient} flex-shrink-0`}>
+              <Flame size={12} className="text-white drop-shadow-sm" strokeWidth={2.5} />
+            </div>
           )}
         </div>
 
-        {/* Row 2: Date + Edit/Delete Icons */}
-        <div className="flex items-center justify-between pl-6">
-          {itemDate ? (
-            <span
-              className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full inline-flex items-center gap-0.5 ${
-                isOverdue 
-                  ? 'bg-destructive text-white' 
-                  : 'bg-muted text-muted-foreground'
-              }`}
-            >
-              <Clock size={9} />
+        {/* Row 2: Due status pill + Category (show first + count) + Delete */}
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* Spacer to align with title (same width as checkbox) */}
+          <div className="w-5 flex-shrink-0" />
+          
+          {!isCompleted && isOverdue && itemDate && (
+            <span className="text-[11px] font-medium px-2 py-1 rounded-md bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400 inline-flex items-center gap-1">
+              <Clock size={10} strokeWidth={2} />
               {formatRelativeTime(itemDate)}
             </span>
-          ) : (
-            <div />
+          )}
+          
+          {!isCompleted && isDueSoon && itemDate && (
+            <span className="text-[11px] font-medium px-2 py-1 rounded-md bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 inline-flex items-center gap-1">
+              <Clock size={10} strokeWidth={2} />
+              {formatRelativeTime(itemDate)}
+            </span>
           )}
 
-          <div className="flex items-center gap-0 -mr-0.5">
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onEdit(item);
+          {!isCompleted && !isOverdue && !isDueSoon && itemDate && (
+            <span className="text-[11px] font-medium px-2 py-1 rounded-md bg-muted text-muted-foreground inline-flex items-center gap-1">
+              <Clock size={10} strokeWidth={2} />
+              {formatRelativeTime(itemDate)}
+            </span>
+          )}
+
+          {item.categories && item.categories.length > 0 && (
+            <span 
+              className="text-[10px] font-medium px-2 py-1 rounded-full inline-flex items-center gap-1"
+              style={{ 
+                backgroundColor: `${item.categories[0].color_hex}20`,
+                color: item.categories[0].color_hex
               }}
-              className="p-1 text-muted-foreground hover:text-foreground"
-              aria-label="Edit"
             >
-              <Edit size={14} strokeWidth={2} />
-            </button>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
+              <Tag size={10} />
+              {item.categories[0].name}
+              {totalCategories > 1 && (
+                <span className="opacity-70">+{totalCategories - 1}</span>
+              )}
+            </span>
+          )}
+
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              if (window.confirm('Are you sure you want to delete this item?')) {
                 onDelete(item.id);
-              }}
-              className="p-1 text-destructive hover:text-destructive/80"
-              aria-label="Delete"
-            >
-              <Trash2 size={16} strokeWidth={2} />
-            </button>
-          </div>
+              }
+            }}
+            className="ml-auto min-w-[44px] min-h-[44px] -my-2 -mr-2 p-2 flex items-center justify-center text-red-500 hover:text-red-600 active:text-red-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive rounded transition-colors"
+            aria-label="Delete item"
+          >
+            <Trash2 size={16} strokeWidth={2} />
+          </button>
         </div>
       </div>
     );
@@ -197,10 +218,12 @@ export function ItemCard({ item, onToggleComplete, onView, onEdit, onDelete, vie
   return (
     <div 
       onClick={() => onView(item)}
-      className={`mb-3 p-4 rounded-xl border bg-card shadow-sm hover:shadow-md transition-all cursor-pointer ${isOverdue ? 'animate-pulse-red' : ''}`}
+      className={`mb-3 p-4 rounded-xl border bg-card shadow-sm hover:shadow-md transition-all cursor-pointer ${
+        isOverdue && !isCompleted ? 'border-rose-400 bg-rose-50/50 dark:bg-rose-950/20' : ''
+      }`}
       style={{ 
         borderLeftWidth: '4px',
-        borderLeftColor: categoryColor
+        borderLeftColor: isOverdue && !isCompleted ? 'hsl(0 84% 60%)' : categoryColor
       }}
     >
       <div className="flex items-start justify-between gap-3">

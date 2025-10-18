@@ -345,8 +345,18 @@ export function ViewDetails({
           </div>
         </div>
 
-        {/* Floating Action Buttons - Edit and Delete */}
-        <div className="fixed bottom-24 right-6 flex flex-col gap-3 z-50">
+        {/* Floating Action Buttons - Edit and Delete - Optimized for mobile */}
+        <div className="sticky bottom-4 left-0 right-0 flex items-center justify-center gap-3 px-6 pt-4 pb-2">
+          <button
+            onClick={() => {
+              onEdit(item);
+              onClose();
+            }}
+            className="flex-1 max-w-[200px] flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground shadow-md hover:shadow-lg active:scale-95 transition-all font-medium"
+          >
+            <Edit2 size={18} strokeWidth={2} />
+            <span>Edit</span>
+          </button>
           <button
             onClick={() => {
               if (confirm(`Are you sure you want to delete "${item.title}"?`)) {
@@ -354,20 +364,10 @@ export function ViewDetails({
                 onClose();
               }
             }}
-            className="p-4 rounded-full bg-destructive/20 backdrop-blur-md border border-destructive/30 text-destructive shadow-lg hover:bg-destructive/30 hover:shadow-xl hover:scale-110 transition-all"
-            title="Delete"
+            className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-destructive/10 text-destructive border border-destructive/20 shadow-md hover:bg-destructive/20 hover:shadow-lg active:scale-95 transition-all font-medium"
           >
-            <Trash2 size={22} strokeWidth={2} />
-          </button>
-          <button
-            onClick={() => {
-              onEdit(item);
-              onClose();
-            }}
-            className="p-4 rounded-full bg-primary/20 backdrop-blur-md border border-primary/30 text-primary shadow-lg hover:bg-primary/30 hover:shadow-xl hover:scale-110 transition-all"
-            title="Edit"
-          >
-            <Edit2 size={22} strokeWidth={2} />
+            <Trash2 size={18} strokeWidth={2} />
+            <span>Delete</span>
           </button>
         </div>
       </DrawerContent>
