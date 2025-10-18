@@ -469,7 +469,7 @@ export function QuickAdd({ onAdd, categories = [], onOpenSettings }: QuickAddPro
             className="mt-2 text-xs text-muted-foreground px-1"
           >
             <p className="opacity-70">
-              💡 Try: "Urgent team meeting tomorrow afternoon", "Pay bills next business day", "Review docs this Friday"
+              💡 Try: &quot;Urgent team meeting tomorrow afternoon&quot;, &quot;Pay bills next business day&quot;, &quot;Review docs this Friday&quot;
             </p>
           </motion.div>
         )}

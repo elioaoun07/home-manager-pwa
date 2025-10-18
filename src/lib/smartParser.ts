@@ -124,7 +124,7 @@ function applyTimeContext(baseDate: Date, input: string): Date {
   // Business day logic
   if (timeContextPatterns.businessDay.test(lowerInput)) {
     // Move to next weekday
-    let daysToAdd = 1;
+    const daysToAdd = 1;
     result.setDate(result.getDate() + daysToAdd);
     while (result.getDay() === 0 || result.getDay() === 6) {
       result.setDate(result.getDate() + 1);
@@ -215,7 +215,7 @@ function detectType(input: string): SmartParsedData['detections']['type'] | unde
   
   // IMPORTANT: Check for reminder patterns FIRST (higher priority than events)
   // This ensures "remind" beats "meeting" or other event words
-  for (const [confidence, keywords] of Object.entries(typePatterns.reminder)) {
+  for (const [, keywords] of Object.entries(typePatterns.reminder)) {
     for (const keyword of keywords) {
       if (lowerInput.includes(keyword.toLowerCase())) {
         return {
