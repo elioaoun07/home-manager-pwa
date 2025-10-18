@@ -554,7 +554,7 @@ export function EditFormNew({ item, categories, onSave, onCancel }: EditFormProp
                     type="time"
                     value={endTime}
                     onChange={(e) => setEndTime(e.target.value)}
-                    className="w-full px-3 py-2 glass rounded-lg border border-white/20 dark:border-gray-700/50 bg-white/50 dark:bg-gray-800/50 text-foreground transition-all focus:ring-2 focus:ring-primary/50 focus:border-primary text-sm"
+                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/50 text-foreground font-medium transition-all focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 focus:shadow-lg"
                     required
                   />
                 </div>
