@@ -11,9 +11,10 @@ interface ItemCardProps {
   onView: (item: ItemWithDetails) => void;
   onEdit: (item: ItemWithDetails) => void;
   onDelete: (id: string) => void;
+  viewDensity?: "compact" | "comfy";
 }
 
-export function ItemCard({ item, onToggleComplete, onView, onEdit, onDelete }: ItemCardProps) {
+export function ItemCard({ item, onToggleComplete, onView, onEdit, onDelete, viewDensity = "comfy" }: ItemCardProps) {
   const [timeLeft, setTimeLeft] = useState<string>("");
 
   const getItemDate = (): Date | null => {
@@ -101,6 +102,85 @@ export function ItemCard({ item, onToggleComplete, onView, onEdit, onDelete }: I
   // Get primary category color
   const categoryColor = item.categories?.[0]?.color_hex || '#6366f1';
 
+  // Compact View
+  if (viewDensity === "compact") {
+    return (
+      <div 
+        onClick={() => onView(item)}
+        className={`mb-2 p-3 rounded-lg border bg-card shadow-sm hover:shadow-md transition-all cursor-pointer ${isOverdue ? 'animate-pulse-red' : ''}`}
+        style={{ 
+          borderLeftWidth: '3px',
+          borderLeftColor: categoryColor
+        }}
+      >
+        <div className="flex items-center justify-between gap-3">
+          {/* Left: Completion checkbox */}
+          <button 
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleComplete(item.id);
+            }}
+            className="flex-shrink-0"
+          >
+            {isCompleted ? <CheckCircle2 size={18} className="text-green-600" /> : <Circle size={18} className="text-gray-400 hover:text-green-600" />}
+          </button>
+
+          {/* Center: Icon and Title */}
+          <div className="flex items-center gap-2 flex-1 min-w-0">
+            <div 
+              className="flex-shrink-0 p-1.5 rounded-lg"
+              style={{ 
+                backgroundColor: `${categoryColor}20`,
+              }}
+            >
+              <Icon size={16} style={{ color: categoryColor }} />
+            </div>
+            <h3 className={`text-sm font-semibold truncate ${isCompleted ? "line-through text-muted-foreground" : "text-foreground"}`}>
+              {item.title}
+            </h3>
+            {urgencyConfig && (
+              <div className={`p-0.5 rounded bg-gradient-to-br ${urgencyConfig.gradient}`}>
+                <Flame size={10} className="text-white drop-shadow-sm" strokeWidth={2.5} />
+              </div>
+            )}
+          </div>
+
+          {/* Right: Time + Actions */}
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {itemDate && (
+              <span className={`text-xs px-2 py-0.5 rounded flex items-center gap-1 ${isOverdue ? "bg-destructive/10 text-destructive" : "bg-muted"}`}>
+                <Clock size={10} />
+                {formatRelativeTime(itemDate)}
+              </span>
+            )}
+            
+            <div className="flex items-center gap-1">
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEdit(item);
+                }}
+                className="p-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+              >
+                <Edit size={14} />
+              </button>
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete(item.id);
+                }}
+                className="p-1.5 rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors"
+              >
+                <Trash2 size={14} />
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Comfy View (default)
   return (
     <div 
       onClick={() => onView(item)}

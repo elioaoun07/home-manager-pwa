@@ -12,11 +12,12 @@ interface CalendarViewNewProps {
   onEdit: (item: ItemWithDetails) => void;
   onDelete: (id: string) => void;
   categories: { id: string; name: string; color_hex?: string }[];
+  viewDensity?: "compact" | "comfy";
 }
 
 type ViewMode = "month" | "week" | "3day";
 
-export function CalendarViewNew({ items, onToggleComplete, onEdit, onDelete, categories }: CalendarViewNewProps) {
+export function CalendarViewNew({ items, onToggleComplete, onEdit, onDelete, categories, viewDensity = "comfy" }: CalendarViewNewProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<ViewMode>("week");
   const [showFilters, setShowFilters] = useState(false);
@@ -470,6 +471,7 @@ export function CalendarViewNew({ items, onToggleComplete, onEdit, onDelete, cat
                               onView={onEdit}
                               onEdit={onEdit}
                               onDelete={onDelete}
+                              viewDensity={viewDensity}
                             />
                           </motion.div>
                         ))

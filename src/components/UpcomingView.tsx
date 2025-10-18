@@ -13,9 +13,10 @@ interface UpcomingViewProps {
   onEdit: (item: ItemWithDetails) => void;
   onDelete: (id: string) => void;
   onView: (item: ItemWithDetails) => void;
+  viewDensity?: "compact" | "comfy";
 }
 
-export function UpcomingView({ items, days, onToggleComplete, onEdit, onDelete, onView }: UpcomingViewProps) {
+export function UpcomingView({ items, days, onToggleComplete, onEdit, onDelete, onView, viewDensity = "comfy" }: UpcomingViewProps) {
   const now = new Date();
   const endDate = new Date(now.getTime() + days * 24 * 60 * 60 * 1000);
 
@@ -187,6 +188,7 @@ export function UpcomingView({ items, days, onToggleComplete, onEdit, onDelete, 
                       onView={onEdit}
                       onEdit={onEdit}
                       onDelete={onDelete}
+                      viewDensity={viewDensity}
                     />
                   </motion.div>
                 ))}

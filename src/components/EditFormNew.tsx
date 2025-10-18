@@ -175,78 +175,86 @@ export function EditFormNew({ item, categories, onSave, onCancel }: EditFormProp
       exit={{ opacity: 0 }}
       className="bg-background w-full max-h-[90vh] overflow-y-auto"
     >
-      <form onSubmit={handleSubmit} className="p-6">
-        {/* Header */}
+      <form onSubmit={handleSubmit} className="p-6 space-y-6">
+        {/* Header - Sticky */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-6"
+          className="sticky top-0 z-10 -mt-6 -mx-6 px-6 py-4 glass-strong border-b border-white/20 dark:border-gray-700/50 shadow-sm"
         >
           {/* Title Row */}
           <div className="flex justify-between items-center mb-3">
             <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-xl gradient-primary shadow-elevated">
+              <div className="p-2.5 rounded-xl bg-gradient-to-br from-primary via-primary to-primary/80 shadow-elevated">
                 <Sparkles className="w-5 h-5 text-white" />
               </div>
-              <h2 className="text-xl font-semibold gradient-text">
-                {item ? "Edit Item" : "Create New Item"}
-              </h2>
+              <div>
+                <h2 className="text-xl font-bold gradient-text">
+                  {item ? "Edit Item" : "Create New Item"}
+                </h2>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Fill in the details below
+                </p>
+              </div>
             </div>
             <motion.button
               whileHover={{ scale: 1.1, rotate: 90 }}
               whileTap={{ scale: 0.9 }}
               type="button"
               onClick={onCancel}
-              className="p-2 rounded-xl glass hover:bg-white/50 dark:hover:bg-gray-800/50 transition-all"
+              className="p-2.5 rounded-xl glass hover:bg-destructive/10 hover:text-destructive transition-all"
             >
               <X className="w-5 h-5" />
             </motion.button>
           </div>
           
-          {/* Visibility Toggle - Right Aligned */}
+          {/* Visibility Toggle */}
           <div className="flex justify-end">
-            <div className="inline-flex items-center p-0.5 bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 rounded-lg border border-purple-200/50 dark:border-purple-700/30">
+            <div className="inline-flex items-center gap-1 p-1 glass rounded-xl border-2 border-white/30 dark:border-gray-700/50 shadow-sm">
               <button
                 type="button"
                 onClick={() => setFormData({ ...formData, is_public: false })}
                 className={`
-                  px-2.5 py-1 rounded-md flex items-center gap-1 text-xs font-medium transition-all
+                  px-3 py-1.5 rounded-lg flex items-center gap-1.5 text-xs font-semibold transition-all
                   ${!formData.is_public
-                    ? 'bg-gradient-to-r from-purple-500 to-purple-600 text-white shadow-sm shadow-purple-500/30'
-                    : 'text-purple-700 dark:text-purple-300 hover:bg-white/40 dark:hover:bg-white/10'}
+                    ? 'bg-gradient-to-r from-purple-500 to-purple-600 text-white shadow-md'
+                    : 'text-muted-foreground hover:bg-white/40 dark:hover:bg-gray-800/40'}
                 `}
               >
-                <Lock className="w-3 h-3" />
+                <Lock className="w-3.5 h-3.5" />
                 <span>Private</span>
               </button>
               <button
                 type="button"
                 onClick={() => setFormData({ ...formData, is_public: true })}
                 className={`
-                  px-2.5 py-1 rounded-md flex items-center gap-1 text-xs font-medium transition-all
+                  px-3 py-1.5 rounded-lg flex items-center gap-1.5 text-xs font-semibold transition-all
                   ${formData.is_public
-                    ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-sm shadow-blue-500/30'
-                    : 'text-blue-700 dark:text-blue-300 hover:bg-white/40 dark:hover:bg-white/10'}
+                    ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-md'
+                    : 'text-muted-foreground hover:bg-white/40 dark:hover:bg-gray-800/40'}
                 `}
               >
-                <Globe className="w-3 h-3" />
+                <Globe className="w-3.5 h-3.5" />
                 <span>Public</span>
               </button>
             </div>
           </div>
         </motion.div>
 
-        {/* Type Selection */}
+        {/* === SECTION 1: Type & Basic Info === */}
         <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="mb-6"
+          className="glass rounded-2xl border-2 border-white/30 dark:border-gray-700/50 p-5 shadow-lg"
         >
-          <label className="text-sm font-semibold text-muted-foreground mb-3 flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-primary" />
-            Type
-          </label>
+          <div className="flex items-center gap-2 mb-4">
+            <div className="p-1.5 rounded-lg bg-primary/10">
+              <Sparkles className="w-4 h-4 text-primary" />
+            </div>
+            <h3 className="font-bold text-sm uppercase tracking-wide text-foreground">Type Selection</h3>
+          </div>
+          
           <div className="grid grid-cols-2 gap-3">
             {(["reminder", "event"] as ItemType[]).map((type, index) => {
               const Icon = typeIcons[type];
@@ -257,22 +265,22 @@ export function EditFormNew({ item, categories, onSave, onCancel }: EditFormProp
                   key={type}
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.1 + index * 0.05 }}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                  transition={{ delay: 0.15 + index * 0.05 }}
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
                   type="button"
                   onClick={() => setFormData({ ...formData, type })}
                   className={`
-                    p-4 rounded-xl transition-all
+                    p-5 rounded-xl border-2 transition-all
                     ${isSelected 
                       ? type === "reminder"
-                        ? "gradient-primary text-white shadow-elevated glow-primary"
-                        : "bg-gradient-to-br from-emerald-400 via-teal-500 to-cyan-600 text-white shadow-elevated shadow-emerald-500/30"
-                      : "glass hover:bg-white/50 dark:hover:bg-gray-800/50"}
+                        ? "bg-gradient-to-br from-blue-500 to-blue-600 border-blue-400 text-white shadow-lg shadow-blue-500/30"
+                        : "bg-gradient-to-br from-emerald-500 to-teal-600 border-emerald-400 text-white shadow-lg shadow-emerald-500/30"
+                      : "bg-white/50 dark:bg-gray-800/30 border-gray-200 dark:border-gray-700 hover:border-primary/50 hover:shadow-md"}
                   `}
                 >
-                  <Icon className={`w-5 h-5 mx-auto mb-2 ${isSelected ? "text-white" : ""}`} />
-                  <span className={`text-sm font-medium ${isSelected ? "text-white" : ""}`}>
+                  <Icon className={`w-6 h-6 mx-auto mb-2 ${isSelected ? "text-white" : "text-muted-foreground"}`} />
+                  <span className={`text-sm font-bold ${isSelected ? "text-white" : "text-foreground"}`}>
                     {type.charAt(0).toUpperCase() + type.slice(1)}
                   </span>
                 </motion.button>
@@ -281,135 +289,155 @@ export function EditFormNew({ item, categories, onSave, onCancel }: EditFormProp
           </div>
         </motion.div>
 
-        {/* Title */}
+        {/* === SECTION 2: Title & Description === */}
         <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="mb-6"
+          className="glass rounded-2xl border-2 border-white/30 dark:border-gray-700/50 p-5 shadow-lg space-y-4"
         >
-          <label className="block text-sm font-semibold text-muted-foreground mb-3">
-            Title
-          </label>
-          <motion.input
-            whileFocus={{ scale: 1.01 }}
-            type="text"
-            value={formData.title || ""}
-            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-            className="w-full px-4 py-3 glass rounded-xl border border-white/20 dark:border-gray-700/50 bg-white/50 dark:bg-gray-800/50 text-foreground transition-all focus:ring-2 focus:ring-primary/50 focus:border-primary"
-            required
-            placeholder="What do you need to do?"
-          />
-        </motion.div>
+          <div className="flex items-center gap-2 mb-1">
+            <div className="p-1.5 rounded-lg bg-primary/10">
+              <StickyNote className="w-4 h-4 text-primary" />
+            </div>
+            <h3 className="font-bold text-sm uppercase tracking-wide text-foreground">Details</h3>
+          </div>
+          
+          {/* Title */}
+          <div>
+            <label className="block text-xs font-bold text-muted-foreground mb-2 uppercase tracking-wide">
+              Title *
+            </label>
+            <motion.input
+              whileFocus={{ scale: 1.005 }}
+              type="text"
+              value={formData.title || ""}
+              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+              className="w-full px-4 py-3.5 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/50 text-foreground font-medium transition-all focus:border-primary focus:ring-4 focus:ring-primary/10 focus:shadow-lg placeholder:text-muted-foreground/50"
+              required
+              placeholder="e.g., Team meeting, Buy groceries..."
+            />
+          </div>
 
-        {/* Description */}
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.25 }}
-          className="mb-6"
-        >
-          <label className="text-sm font-semibold text-muted-foreground mb-3 flex items-center gap-2">
-            <StickyNote className="w-4 h-4 text-primary" />
-            Description
-          </label>
-          <motion.textarea
-            whileFocus={{ scale: 1.01 }}
-            value={formData.description || ""}
-            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-            className="w-full px-4 py-3 glass rounded-xl border border-white/20 dark:border-gray-700/50 bg-white/50 dark:bg-gray-800/50 text-foreground transition-all focus:ring-2 focus:ring-primary/50 focus:border-primary resize-none"
-            rows={4}
-            placeholder="Add some details..."
-          />
-        </motion.div>
-
-        {/* Priority */}
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.3 }}
-          className="mb-6"
-        >
-          <label className="text-sm font-semibold text-muted-foreground mb-3 flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 text-warning" />
-            Priority
-          </label>
-          <div className="grid grid-cols-4 gap-2">
-            {(["low", "normal", "high", "urgent"] as Priority[]).map((priority, index) => {
-              const isSelected = formData.priority === priority;
-              const config = priorityConfig[priority];
-
-              return (
-                <motion.button
-                  key={priority}
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.3 + index * 0.05 }}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  type="button"
-                  onClick={() => setFormData({ ...formData, priority })}
-                  className={`
-                    px-3 py-2.5 rounded-xl text-sm font-medium transition-all
-                    ${isSelected 
-                      ? `bg-gradient-to-r ${config.bg} text-white shadow-elevated ${config.glow}` 
-                      : "glass hover:bg-white/50 dark:hover:bg-gray-800/50"}
-                  `}
-                >
-                  {priority.charAt(0).toUpperCase() + priority.slice(1)}
-                </motion.button>
-              );
-            })}
+          {/* Description */}
+          <div>
+            <label className="block text-xs font-bold text-muted-foreground mb-2 uppercase tracking-wide">
+              Description
+            </label>
+            <motion.textarea
+              whileFocus={{ scale: 1.005 }}
+              value={formData.description || ""}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              className="w-full px-4 py-3.5 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/50 text-foreground transition-all focus:border-primary focus:ring-4 focus:ring-primary/10 focus:shadow-lg resize-none placeholder:text-muted-foreground/50"
+              rows={4}
+              placeholder="Add any additional details or notes..."
+            />
           </div>
         </motion.div>
 
-        {/* Status */}
+        {/* === SECTION 3: Priority & Status === */}
         <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.32 }}
-          className="mb-6"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.25 }}
+          className="glass rounded-2xl border-2 border-white/30 dark:border-gray-700/50 p-5 shadow-lg space-y-4"
         >
-          <label className="text-sm font-semibold text-muted-foreground mb-3">
-            Status
-          </label>
-          <select
-            value={formData.status || "pending"}
-            onChange={(e) => setFormData({ ...formData, status: e.target.value as ItemStatus })}
-            className="w-full px-4 py-3 glass rounded-xl border border-white/20 dark:border-gray-700/50 bg-white/50 dark:bg-gray-800/50 text-foreground transition-all focus:ring-2 focus:ring-primary/50 focus:border-primary"
-          >
-            <option value="pending">Pending</option>
-            <option value="done">Done</option>
-            <option value="cancelled">Cancelled</option>
-            {formData.type === "event" && (
-              <>
-                <option value="confirmed">Confirmed</option>
-                <option value="tentative">Tentative</option>
-              </>
-            )}
-          </select>
+          <div className="flex items-center gap-2 mb-1">
+            <div className="p-1.5 rounded-lg bg-warning/10">
+              <AlertCircle className="w-4 h-4 text-warning" />
+            </div>
+            <h3 className="font-bold text-sm uppercase tracking-wide text-foreground">Priority & Status</h3>
+          </div>
+          
+          {/* Priority */}
+          <div>
+            <label className="block text-xs font-bold text-muted-foreground mb-2 uppercase tracking-wide">
+              Priority Level
+            </label>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {(["low", "normal", "high", "urgent"] as Priority[]).map((priority, index) => {
+                const isSelected = formData.priority === priority;
+                const config = priorityConfig[priority];
+
+                return (
+                  <motion.button
+                    key={priority}
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.3 + index * 0.03 }}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    type="button"
+                    onClick={() => setFormData({ ...formData, priority })}
+                    className={`
+                      px-3 py-3 rounded-xl text-sm font-bold transition-all border-2
+                      ${isSelected 
+                        ? `bg-gradient-to-br ${config.bg} text-white shadow-lg border-transparent ${config.glow}` 
+                        : "bg-white/50 dark:bg-gray-800/30 border-gray-200 dark:border-gray-700 hover:border-primary/50 text-foreground"}
+                    `}
+                  >
+                    {priority.charAt(0).toUpperCase() + priority.slice(1)}
+                  </motion.button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Status */}
+          <div>
+            <label className="block text-xs font-bold text-muted-foreground mb-2 uppercase tracking-wide">
+              Current Status
+            </label>
+            <select
+              value={formData.status || "pending"}
+              onChange={(e) => setFormData({ ...formData, status: e.target.value as ItemStatus })}
+              className="w-full px-4 py-3.5 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/50 text-foreground font-medium transition-all focus:border-primary focus:ring-4 focus:ring-primary/10 focus:shadow-lg"
+            >
+              <option value="pending">⏳ Pending</option>
+              <option value="done">✅ Done</option>
+              <option value="cancelled">❌ Cancelled</option>
+              {formData.type === "event" && (
+                <>
+                  <option value="confirmed">✔️ Confirmed</option>
+                  <option value="tentative">❓ Tentative</option>
+                </>
+              )}
+            </select>
+          </div>
         </motion.div>
 
-        {/* Categories */}
+        {/* === SECTION 4: Categories === */}
         <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.35 }}
-          className="mb-6"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="glass rounded-2xl border-2 border-white/30 dark:border-gray-700/50 p-5 shadow-lg"
         >
-          <label className="text-sm font-semibold text-muted-foreground mb-3 flex items-center gap-2">
-            <Tag className="w-4 h-4 text-success" />
-            Categories
-          </label>
+          <div className="flex items-center gap-2 mb-3">
+            <div className="p-1.5 rounded-lg bg-success/10">
+              <Tag className="w-4 h-4 text-success" />
+            </div>
+            <h3 className="font-bold text-sm uppercase tracking-wide text-foreground">Categories</h3>
+            <span className="ml-auto text-xs text-muted-foreground font-medium">
+              {selectedCategories.length} selected
+            </span>
+          </div>
+          
           {categories.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No categories available. Categories will be loaded automatically.</p>
+            <div className="text-center py-6 px-4 bg-muted/30 rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-700">
+              <Tag className="w-8 h-8 mx-auto mb-2 text-muted-foreground/50" />
+              <p className="text-sm text-muted-foreground">No categories available</p>
+            </div>
           ) : (
             <div className="flex flex-wrap gap-2">
-              {categories.map((cat) => {
+              {categories.map((cat, index) => {
                 const isSelected = selectedCategories.includes(cat.id);
                 return (
                   <motion.button
                     key={cat.id}
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.35 + index * 0.02 }}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     type="button"
@@ -421,14 +449,14 @@ export function EditFormNew({ item, categories, onSave, onCancel }: EditFormProp
                       }
                     }}
                     className={`
-                      px-3 py-2 rounded-xl text-sm font-medium flex items-center gap-2 transition-all
+                      px-3 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 transition-all border-2
                       ${isSelected 
-                        ? "bg-gradient-to-r from-success to-emerald-500 text-white shadow-elevated" 
-                        : "glass hover:bg-white/50 dark:hover:bg-gray-800/50"}
+                        ? "text-white shadow-lg border-transparent" 
+                        : "bg-white/50 dark:bg-gray-800/30 border-gray-200 dark:border-gray-700 hover:border-primary/50 text-foreground"}
                     `}
                     style={isSelected && cat.color_hex ? { 
-                      background: cat.color_hex,
-                      boxShadow: `0 0 20px ${cat.color_hex}50`
+                      background: `linear-gradient(135deg, ${cat.color_hex} 0%, ${cat.color_hex}dd 100%)`,
+                      boxShadow: `0 4px 12px ${cat.color_hex}40`
                     } : undefined}
                   >
                     <Tag className="w-3.5 h-3.5" />
@@ -440,19 +468,21 @@ export function EditFormNew({ item, categories, onSave, onCancel }: EditFormProp
           )}
         </motion.div>
 
-        {/* Event-specific fields */}
+        {/* === SECTION 5: Event Details === */}
         {formData.type === "event" && (
           <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.4 }}
-            className="mb-6 p-4 glass rounded-xl border border-white/20 dark:border-gray-700/50"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.35 }}
+            className="glass rounded-2xl border-2 border-emerald-200 dark:border-emerald-700/50 p-5 shadow-lg space-y-4"
           >
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-semibold text-muted-foreground flex items-center gap-2">
-                <Calendar className="w-4 h-4 text-primary" />
-                Event Details
-              </h3>
+            <div className="flex items-center justify-between mb-1">
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 rounded-lg bg-emerald-500/10">
+                  <Calendar className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                </div>
+                <h3 className="font-bold text-sm uppercase tracking-wide text-foreground">Event Schedule</h3>
+              </div>
               <button
                 type="button"
                 onClick={() => {
@@ -462,64 +492,64 @@ export function EditFormNew({ item, categories, onSave, onCancel }: EditFormProp
                   setEndTime("");
                   setLocation("");
                 }}
-                className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
-                title="Clear all dates and times"
+                className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-all"
+                title="Clear all"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
             
-            <div className="mb-4">
-              <label className="flex items-center gap-2 cursor-pointer">
+            <div className="flex items-center p-3 bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 rounded-xl border-2 border-emerald-200 dark:border-emerald-700/30">
+              <label className="flex items-center gap-2 cursor-pointer flex-1">
                 <input
                   type="checkbox"
                   checked={allDay}
                   onChange={(e) => setAllDay(e.target.checked)}
-                  className="w-4 h-4 rounded border-gray-300"
+                  className="w-5 h-5 rounded border-2 border-emerald-300 text-emerald-600 focus:ring-2 focus:ring-emerald-500/20"
                 />
-                <span className="text-sm">All Day Event</span>
+                <span className="text-sm font-semibold text-emerald-700 dark:text-emerald-300">All Day Event</span>
               </label>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 mb-3">
+            <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-xs text-muted-foreground mb-1 block">Start Date</label>
+                <label className="block text-xs font-bold text-muted-foreground mb-2 uppercase tracking-wide">Start Date *</label>
                 <input
                   type="date"
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
-                  className="w-full px-3 py-2 glass rounded-lg border border-white/20 dark:border-gray-700/50 bg-white/50 dark:bg-gray-800/50 text-foreground transition-all focus:ring-2 focus:ring-primary/50 focus:border-primary text-sm"
+                  className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/50 text-foreground font-medium transition-all focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 focus:shadow-lg"
                   required
                 />
               </div>
               {!allDay && (
                 <div>
-                  <label className="text-xs text-muted-foreground mb-1 block">Start Time</label>
+                  <label className="block text-xs font-bold text-muted-foreground mb-2 uppercase tracking-wide">Start Time *</label>
                   <input
                     type="time"
                     value={startTime}
                     onChange={(e) => setStartTime(e.target.value)}
-                    className="w-full px-3 py-2 glass rounded-lg border border-white/20 dark:border-gray-700/50 bg-white/50 dark:bg-gray-800/50 text-foreground transition-all focus:ring-2 focus:ring-primary/50 focus:border-primary text-sm"
+                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/50 text-foreground font-medium transition-all focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 focus:shadow-lg"
                     required
                   />
                 </div>
               )}
             </div>
 
-            <div className="grid grid-cols-2 gap-3 mb-3">
+            <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-xs text-muted-foreground mb-1 block">End Date</label>
+                <label className="block text-xs font-bold text-muted-foreground mb-2 uppercase tracking-wide">End Date *</label>
                 <input
                   type="date"
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
-                  className="w-full px-3 py-2 glass rounded-lg border border-white/20 dark:border-gray-700/50 bg-white/50 dark:bg-gray-800/50 text-foreground transition-all focus:ring-2 focus:ring-primary/50 focus:border-primary text-sm"
+                  className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/50 text-foreground font-medium transition-all focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 focus:shadow-lg"
                   required
                 />
               </div>
               {!allDay && (
                 <div>
-                  <label className="text-xs text-muted-foreground mb-1 block">End Time</label>
+                  <label className="block text-xs font-bold text-muted-foreground mb-2 uppercase tracking-wide">End Time *</label>
                   <input
                     type="time"
                     value={endTime}
@@ -532,13 +562,13 @@ export function EditFormNew({ item, categories, onSave, onCancel }: EditFormProp
             </div>
 
             <div>
-              <label className="text-xs text-muted-foreground mb-1 block">Location</label>
+              <label className="text-xs font-bold uppercase tracking-wide text-foreground/70 mb-2 block">📍 LOCATION</label>
               <input
                 type="text"
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
-                placeholder="Add location"
-                className="w-full px-3 py-2 glass rounded-lg border border-white/20 dark:border-gray-700/50 bg-white/50 dark:bg-gray-800/50 text-foreground transition-all focus:ring-2 focus:ring-primary/50 focus:border-primary text-sm"
+                placeholder="Where will this take place?"
+                className="w-full px-4 py-3.5 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/50 text-foreground font-medium transition-all focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 focus:shadow-lg focus:shadow-emerald-500/5"
               />
             </div>
           </motion.div>
@@ -549,57 +579,61 @@ export function EditFormNew({ item, categories, onSave, onCancel }: EditFormProp
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.4 }}
-            className="mb-6 p-4 glass rounded-xl border border-white/20 dark:border-gray-700/50"
+            transition={{ delay: 0.3 }}
+            className="mb-6 p-5 glass rounded-2xl border-2 border-blue-200 dark:border-blue-500/30 shadow-lg space-y-4"
           >
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-semibold text-muted-foreground flex items-center gap-2">
-                <Clock className="w-4 h-4 text-primary" />
-                Reminder Details
-              </h3>
+            <div className="flex items-center justify-between mb-1">
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 rounded-lg bg-blue-500/10">
+                  <Clock className="w-4 h-4 text-blue-500" />
+                </div>
+                <h3 className="font-bold text-sm uppercase tracking-wide">Reminder Schedule</h3>
+              </div>
               <button
                 type="button"
                 onClick={() => {
                   setDueDate("");
                   setDueTime("");
                 }}
-                className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
+                className="p-2 rounded-lg hover:bg-red-500/10 text-muted-foreground hover:text-red-500 transition-all border border-transparent hover:border-red-200"
                 title="Clear date and time"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
             
-            <div className="grid grid-cols-2 gap-3 mb-3">
+            <p className="text-xs text-muted-foreground mb-3">⏰ Set when you want to be reminded</p>
+            
+            <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-xs text-muted-foreground mb-1 block">Due Date</label>
+                <label className="text-xs font-bold uppercase tracking-wide text-foreground/70 mb-2 block">📅 DUE DATE</label>
                 <input
                   type="date"
                   value={dueDate}
                   onChange={(e) => setDueDate(e.target.value)}
-                  className="w-full px-3 py-2 glass rounded-lg border border-white/20 dark:border-gray-700/50 bg-white/50 dark:bg-gray-800/50 text-foreground transition-all focus:ring-2 focus:ring-primary/50 focus:border-primary text-sm"
+                  className="w-full px-4 py-3.5 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/50 text-foreground font-medium transition-all focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 focus:shadow-lg focus:shadow-blue-500/5"
                 />
               </div>
               <div>
-                <label className="text-xs text-muted-foreground mb-1 block">Due Time</label>
+                <label className="text-xs font-bold uppercase tracking-wide text-foreground/70 mb-2 block">⏰ DUE TIME</label>
                 <input
                   type="time"
                   value={dueTime}
                   onChange={(e) => setDueTime(e.target.value)}
-                  className="w-full px-3 py-2 glass rounded-lg border border-white/20 dark:border-gray-700/50 bg-white/50 dark:bg-gray-800/50 text-foreground transition-all focus:ring-2 focus:ring-primary/50 focus:border-primary text-sm"
+                  className="w-full px-4 py-3.5 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/50 text-foreground font-medium transition-all focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 focus:shadow-lg focus:shadow-blue-500/5"
                 />
               </div>
             </div>
 
             <div>
-              <label className="text-xs text-muted-foreground mb-1 block">Estimate (minutes)</label>
+              <label className="text-xs font-bold uppercase tracking-wide text-foreground/70 mb-2 block">⏱️ ESTIMATE (MINUTES)</label>
               <input
                 type="number"
                 value={estimateMinutes || ""}
                 onChange={(e) => setEstimateMinutes(e.target.value ? parseInt(e.target.value) : undefined)}
                 placeholder="How long will this take?"
                 min="1"
-                className="w-full px-3 py-2 glass rounded-lg border border-white/20 dark:border-gray-700/50 bg-white/50 dark:bg-gray-800/50 text-foreground transition-all focus:ring-2 focus:ring-primary/50 focus:border-primary text-sm"
+                className="w-full px-4 py-3.5 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/50 text-foreground font-medium transition-all focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 focus:shadow-lg focus:shadow-blue-500/5"
               />
             </div>
           </motion.div>
@@ -610,15 +644,24 @@ export function EditFormNew({ item, categories, onSave, onCancel }: EditFormProp
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.45 }}
-            className="mb-6"
+            transition={{ delay: 0.35 }}
+            className="mb-6 p-5 glass rounded-2xl border-2 border-purple-200 dark:border-purple-500/30 shadow-lg space-y-4"
           >
-            <label className="text-sm font-semibold text-muted-foreground mb-3 flex items-center gap-2">
-              <Check className="w-4 h-4 text-success" />
-              Subtasks
-            </label>
+            <div className="flex items-center gap-2 mb-1">
+              <div className="p-1.5 rounded-lg bg-purple-500/10">
+                <Check className="w-4 h-4 text-purple-500" />
+              </div>
+              <h3 className="font-bold text-sm uppercase tracking-wide">Subtasks</h3>
+              {subtasks.length > 0 && (
+                <span className="ml-auto px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-400 text-xs font-bold">
+                  {subtasks.filter(s => s.done_at).length}/{subtasks.length}
+                </span>
+              )}
+            </div>
             
-            <div className="flex gap-2 mb-3">
+            <p className="text-xs text-muted-foreground mb-3">✅ Break down your reminder into smaller tasks</p>
+            
+            <div className="flex gap-2 mb-4">
               <input
                 type="text"
                 value={newSubtask}
@@ -629,17 +672,17 @@ export function EditFormNew({ item, categories, onSave, onCancel }: EditFormProp
                     addSubtask();
                   }
                 }}
-                placeholder="Add a subtask"
-                className="flex-1 px-4 py-3 glass rounded-xl border border-white/20 dark:border-gray-700/50 bg-white/50 dark:bg-gray-800/50 text-foreground transition-all focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                placeholder="Type a subtask and press Enter..."
+                className="flex-1 px-4 py-3.5 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/50 text-foreground font-medium transition-all focus:border-purple-500 focus:ring-4 focus:ring-purple-500/10 focus:shadow-lg focus:shadow-purple-500/5"
               />
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 type="button"
                 onClick={addSubtask}
-                className="px-5 py-3 bg-gradient-to-r from-success to-emerald-500 text-white rounded-xl shadow-elevated glow-success font-medium"
+                className="px-5 py-3.5 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-xl shadow-lg hover:shadow-xl font-bold flex items-center gap-2 border-2 border-purple-400"
               >
-                <Plus className="w-4 h-4" />
+                <Plus className="w-5 h-5" />
               </motion.button>
             </div>
 
@@ -651,20 +694,20 @@ export function EditFormNew({ item, categories, onSave, onCancel }: EditFormProp
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: 20 }}
-                    className="flex items-center gap-3 p-3 glass rounded-xl border border-white/20 dark:border-gray-700/50"
+                    className="flex items-center gap-3 p-4 glass rounded-xl border-2 border-white/30 dark:border-gray-700/50 hover:border-purple-300 dark:hover:border-purple-500/50 transition-all shadow-sm"
                   >
                     <button
                       type="button"
                       onClick={() => toggleSubtask(index)}
-                      className={`flex-shrink-0 w-5 h-5 rounded-md border-2 transition-all ${
+                      className={`flex-shrink-0 w-6 h-6 rounded-lg border-2 transition-all ${
                         subtask.done_at
-                          ? "bg-success border-success"
-                          : "border-gray-400"
+                          ? "bg-gradient-to-br from-green-400 to-green-500 border-green-500 shadow-md"
+                          : "border-gray-400 hover:border-purple-500"
                       }`}
                     >
-                      {subtask.done_at && <Check className="w-4 h-4 text-white" />}
+                      {subtask.done_at && <Check className="w-5 h-5 text-white" />}
                     </button>
-                    <span className={`flex-1 ${subtask.done_at ? "line-through text-muted-foreground" : ""}`}>
+                    <span className={`flex-1 font-medium ${subtask.done_at ? "line-through text-muted-foreground" : "text-foreground"}`}>
                       {subtask.title}
                     </span>
                     <motion.button
@@ -672,9 +715,9 @@ export function EditFormNew({ item, categories, onSave, onCancel }: EditFormProp
                       whileTap={{ scale: 0.9 }}
                       type="button"
                       onClick={() => removeSubtask(index)}
-                      className="p-1.5 rounded-lg hover:bg-destructive/20 transition-all"
+                      className="p-2 rounded-lg hover:bg-red-500/10 border border-transparent hover:border-red-200 transition-all"
                     >
-                      <Trash2 className="w-4 h-4 text-destructive" />
+                      <Trash2 className="w-4 h-4 text-red-500" />
                     </motion.button>
                   </motion.div>
                 ))}
@@ -687,26 +730,26 @@ export function EditFormNew({ item, categories, onSave, onCancel }: EditFormProp
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-          className="flex justify-end gap-3 mt-8 pt-6 border-t border-white/10 dark:border-gray-700/30"
+          transition={{ delay: 0.4 }}
+          className="flex justify-end gap-4 mt-8 pt-6 border-t-2 border-white/20 dark:border-gray-700/50"
         >
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             type="button"
             onClick={onCancel}
-            className="px-6 py-3 rounded-xl glass hover:bg-white/50 dark:hover:bg-gray-800/50 font-medium transition-all"
+            className="px-8 py-4 rounded-xl glass border-2 border-gray-300 dark:border-gray-600 hover:bg-white/80 dark:hover:bg-gray-800/80 font-bold uppercase tracking-wide text-sm transition-all shadow-md hover:shadow-lg"
           >
-            Cancel
+            ✖ Cancel
           </motion.button>
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             type="submit"
-            className="px-6 py-3 rounded-xl gradient-primary text-white shadow-elevated glow-primary font-medium flex items-center gap-2"
+            className="px-8 py-4 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-xl hover:shadow-2xl font-bold uppercase tracking-wide text-sm flex items-center gap-2 border-2 border-blue-400"
           >
-            <Save className="w-4 h-4" />
-            {item ? "Save Changes" : "Create Item"}
+            <Save className="w-5 h-5" />
+            {item ? "💾 Save Changes" : "✨ Create Item"}
           </motion.button>
         </motion.div>
       </form>

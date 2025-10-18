@@ -4,12 +4,13 @@ import { useState, useEffect, useRef } from "react";
 import { parseQuickAdd } from "@/lib/parser";
 import { ParsedInput, Priority } from "@/types";
 import { formatDateTime } from "@/lib/utils";
-import { Bell, Calendar, Tag, Send, Sparkles, Clock } from "lucide-react";
+import { Bell, Calendar, Tag, Send, Sparkles, Clock, Menu } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface QuickAddProps {
   onAdd: (parsed: ParsedInput) => void;
   categories?: Array<{ id: string; name: string; color_hex?: string }>;
+  onOpenSettings?: () => void;
 }
 
 interface SmartSuggestion {
@@ -20,7 +21,7 @@ interface SmartSuggestion {
   icon?: string;
 }
 
-export function QuickAdd({ onAdd, categories = [] }: QuickAddProps) {
+export function QuickAdd({ onAdd, categories = [], onOpenSettings }: QuickAddProps) {
   const [input, setInput] = useState("");
   const [preview, setPreview] = useState<ParsedInput | null>(null);
   const [suggestions, setSuggestions] = useState<SmartSuggestion[]>([]);
@@ -197,13 +198,26 @@ export function QuickAdd({ onAdd, categories = [] }: QuickAddProps) {
             <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-info/5" />
             
             <div className="relative flex items-center gap-2 bg-card/95 backdrop-blur">
+              {/* Hamburger Menu Button */}
+              {onOpenSettings && (
+                <motion.button
+                  type="button"
+                  onClick={onOpenSettings}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="ml-3 p-2 rounded-xl glass hover:bg-white/50 dark:hover:bg-gray-800/50 transition-all"
+                >
+                  <Menu className="w-5 h-5 text-muted-foreground" />
+                </motion.button>
+              )}
+              
               <motion.div
                 animate={{
                   rotate: isFocused ? [0, 10, -10, 0] : 0,
                   scale: isFocused ? [1, 1.1, 1] : 1,
                 }}
                 transition={{ duration: 0.5 }}
-                className="pl-4"
+                className={onOpenSettings ? "" : "pl-4"}
               >
                 <Sparkles className={`${isFocused ? 'text-primary' : 'text-muted-foreground'} transition-colors`} size={22} />
               </motion.div>

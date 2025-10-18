@@ -12,6 +12,7 @@ import { BottomNav } from "@/components/BottomNav";
 import { FAB } from "@/components/FAB";
 import { EditFormNew } from "@/components/EditFormNew";
 import { ViewDetails } from "@/components/ViewDetails";
+import { SettingsSidebar, ViewDensity } from "@/components/SettingsSidebar";
 import { Drawer, DrawerContent, DrawerTitle, DrawerDescription } from "@/components/ui/drawer";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
@@ -36,6 +37,8 @@ function HomeContent() {
   const [viewingItem, setViewingItem] = useState<ItemWithDetails | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isViewDetailsOpen, setIsViewDetailsOpen] = useState(false);
+  const [isSettingsSidebarOpen, setIsSettingsSidebarOpen] = useState(false);
+  const [viewDensity, setViewDensity] = useState<ViewDensity>("comfy");
   const [isLoading, setIsLoading] = useState(true);
 
   // Load items from database
@@ -91,6 +94,12 @@ function HomeContent() {
   useEffect(() => {
     loadItems();
     loadCategories();
+    
+    // Load view density from localStorage
+    const savedDensity = localStorage.getItem("viewDensity") as ViewDensity | null;
+    if (savedDensity === "compact" || savedDensity === "comfy") {
+      setViewDensity(savedDensity);
+    }
   }, []);
 
   const handleQuickAdd = async (parsed: ParsedInput) => {
@@ -329,7 +338,22 @@ function HomeContent() {
         <div className="fixed inset-0 gradient-mesh opacity-30 pointer-events-none" />
         <div className="fixed inset-0 bg-[radial-gradient(circle_at_50%_120%,hsl(var(--primary)/0.1),transparent_50%)] pointer-events-none" />
 
-        <QuickAdd onAdd={handleQuickAdd} categories={categories} />
+        <QuickAdd 
+          onAdd={handleQuickAdd} 
+          categories={categories}
+          onOpenSettings={() => setIsSettingsSidebarOpen(true)}
+        />
+
+        <SettingsSidebar
+          isOpen={isSettingsSidebarOpen}
+          onClose={() => setIsSettingsSidebarOpen(false)}
+          viewDensity={viewDensity}
+          onViewDensityChange={(density) => {
+            setViewDensity(density);
+            localStorage.setItem("viewDensity", density);
+            toast.success(`View changed to ${density === "compact" ? "Compact" : "Comfy"}`);
+          }}
+        />
 
         <main className="relative max-w-2xl mx-auto px-4 pt-4">
           <AnimatePresence mode="wait">
@@ -346,6 +370,7 @@ function HomeContent() {
                   onToggleComplete={handleToggleComplete}
                   onEdit={handleView}
                   onDelete={handleDelete}
+                  viewDensity={viewDensity}
                 />
               )}
 
@@ -357,6 +382,7 @@ function HomeContent() {
                   onView={handleView}
                   onEdit={handleView}
                   onDelete={handleDelete}
+                  viewDensity={viewDensity}
                 />
               )}
 
@@ -367,6 +393,7 @@ function HomeContent() {
                   onView={handleView}
                   onEdit={handleView}
                   onDelete={handleDelete}
+                  viewDensity={viewDensity}
                 />
               )}
 
@@ -377,6 +404,7 @@ function HomeContent() {
                   onEdit={handleView}
                   onDelete={handleDelete}
                   categories={categories}
+                  viewDensity={viewDensity}
                 />
               )}
             </motion.div>
