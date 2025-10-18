@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // Type definitions for node-ical
 declare module 'node-ical' {
   export interface VEvent {

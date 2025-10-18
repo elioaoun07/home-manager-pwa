@@ -40,7 +40,7 @@ export function CalendarViewNew({ items, onToggleComplete, onEdit, onDelete, cat
   const [showAnniversaries, setShowAnniversaries] = useState(false);
 
   // Load holidays dynamically from ICS feed
-  const { holidays: publicHolidays, loading: holidaysLoading, error: holidaysError } = useHolidays({
+  const { holidays: publicHolidays, loading: holidaysLoading } = useHolidays({
     feeds: holidayFeeds
   });
 
@@ -733,16 +733,15 @@ export function CalendarViewNew({ items, onToggleComplete, onEdit, onDelete, cat
                                 ? new Date(item.reminder_details.due_at)
                                 : null;
                               
-                              const endTime = item.type === "event" && item.event_details
-                                ? new Date(item.event_details.end_at)
-                                : null;
+                              // Commented out for future use
+                              // const endTime = item.type === "event" && item.event_details
+                              //   ? new Date(item.event_details.end_at)
+                              //   : null;
 
-                              const duration = endTime && startTime
-                                ? Math.round((endTime.getTime() - startTime.getTime()) / (1000 * 60 * 60) * 10) / 10
-                                : 0;
-
-                              // Show duration indicator only for events > 1 hour
-                              const showDurationBar = duration > 1;
+                              // Calculate duration for future use
+                              // const duration = endTime && startTime
+                              //   ? Math.round((endTime.getTime() - startTime.getTime()) / (1000 * 60 * 60) * 10) / 10
+                              //   : 0;
 
                               return (
                                 <div

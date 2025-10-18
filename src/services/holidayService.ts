@@ -61,13 +61,12 @@ export async function fetchHolidaysFromAPI(countryCode: string, feedId: string):
       throw new Error(`Failed to fetch holidays: ${response.statusText}`);
     }
 
-    const data = await response.json();
-    
-    // Convert API response to Holiday objects
-    const holidays: Holiday[] = data.events.map((event: any) => {
-      const date = new Date(event.date);
+      const data = await response.json();
       
-      // Determine if it's a lunar calendar event (Islamic holidays)
+      // Convert API response to Holiday objects
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const holidays: Holiday[] = data.events.map((event: any) => {
+        const date = new Date(event.date);      // Determine if it's a lunar calendar event (Islamic holidays)
       const isLunar = event.title.toLowerCase().includes('eid') ||
                       event.title.toLowerCase().includes('ramadan') ||
                       event.title.toLowerCase().includes('muharram') ||

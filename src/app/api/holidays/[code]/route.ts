@@ -7,6 +7,8 @@ export const revalidate = 86400; // 24 hours
 // Map country codes to Google Calendar ICS URLs
 const HOLIDAY_SOURCES: Record<string, string> = {
   lebanon: 'https://calendar.google.com/calendar/ical/en.lb.official%23holiday%40group.v.calendar.google.com/public/basic.ics',
+  // Add your personal calendar ICS URL here:
+  // personal: 'YOUR_PERSONAL_CALENDAR_ICS_URL_HERE',
 };
 
 interface HolidayEvent {
@@ -46,10 +48,14 @@ export async function GET(
     const events = await ical.async.fromURL(icsUrl);
     const holidays: HolidayEvent[] = [];
 
+    // Debug: Log total events fetched
+    console.log(`[Holidays API] Fetched ${Object.keys(events).length} events from ICS feed`);
+
     // Process events
-    for (const [key, event] of Object.entries(events)) {
+    for (const [, event] of Object.entries(events)) {
       // Type guard for VEVENT
       if (event && typeof event === 'object' && 'type' in event && event.type === 'VEVENT') {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const vevent = event as any; // node-ical doesn't have proper TypeScript definitions
         const startDate = vevent.start;
         if (!startDate) continue;
@@ -74,6 +80,9 @@ export async function GET(
         });
       }
     }
+
+    // Debug: Log processed holidays count
+    console.log(`[Holidays API] Processed ${holidays.length} VEVENT entries`);
 
     // Sort by date, then by title
     holidays.sort((a, b) => {

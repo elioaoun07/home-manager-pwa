@@ -16,7 +16,7 @@ interface UpcomingViewProps {
   viewDensity?: "compact" | "comfy";
 }
 
-export function UpcomingView({ items, days, onToggleComplete, onEdit, onDelete, onView, viewDensity = "comfy" }: UpcomingViewProps) {
+export function UpcomingView({ items, days, onToggleComplete, onEdit, onDelete, viewDensity = "comfy" }: UpcomingViewProps) {
   const now = new Date();
   const endDate = new Date(now.getTime() + days * 24 * 60 * 60 * 1000);
 

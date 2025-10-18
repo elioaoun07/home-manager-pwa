@@ -14,7 +14,7 @@ interface NotesViewProps {
   viewDensity?: "compact" | "comfy";
 }
 
-export function NotesView({ items, onToggleComplete, onEdit, onDelete, onView, viewDensity = "comfy" }: NotesViewProps) {
+export function NotesView({ items, onToggleComplete, onEdit, onDelete, viewDensity = "comfy" }: NotesViewProps) {
   // Filter for notes: reminders without a due_at date
   const notes = items.filter(item => 
     item.type === "reminder" && !item.reminder_details?.due_at
