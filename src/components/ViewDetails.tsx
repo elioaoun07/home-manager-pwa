@@ -121,7 +121,7 @@ export function ViewDetails({
   const totalSubtasks = item.subtasks?.length || 0;
 
   return (
-    <Drawer open={isOpen} onOpenChange={(open) => !open && onClose()}>
+    <Drawer open={isOpen} onOpenChange={(open: boolean) => !open && onClose()}>
       <DrawerContent className="max-h-[90vh]">
         <DrawerHeader className="relative">
           <button

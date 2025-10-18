@@ -312,7 +312,7 @@ export function EditFormNew({ item, categories, onSave, onCancel }: EditFormProp
               whileFocus={{ scale: 1.005 }}
               type="text"
               value={formData.title || ""}
-              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, title: e.target.value })}
               className="w-full px-4 py-3.5 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/50 text-foreground font-medium transition-all focus:border-primary focus:ring-4 focus:ring-primary/10 focus:shadow-lg placeholder:text-muted-foreground/50"
               required
               placeholder="e.g., Team meeting, Buy groceries..."
@@ -327,7 +327,7 @@ export function EditFormNew({ item, categories, onSave, onCancel }: EditFormProp
             <motion.textarea
               whileFocus={{ scale: 1.005 }}
               value={formData.description || ""}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setFormData({ ...formData, description: e.target.value })}
               className="w-full px-4 py-3.5 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/50 text-foreground transition-all focus:border-primary focus:ring-4 focus:ring-primary/10 focus:shadow-lg resize-none placeholder:text-muted-foreground/50"
               rows={4}
               placeholder="Add any additional details or notes..."

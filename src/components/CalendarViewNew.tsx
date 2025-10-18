@@ -5,6 +5,12 @@ import { ItemWithDetails, Priority } from "@/types";
 import { ItemCard } from "./ItemCard";
 import { motion, AnimatePresence } from "framer-motion";
 import { Calendar, ChevronLeft, ChevronRight, Filter, LayoutGrid, Rows3, CalendarDays, X } from "lucide-react";
+import { useHolidays } from "@/hooks/useHolidays";
+import { getHolidaysForDate } from "@/services/holidayService";
+import { holidayFeeds, HOLIDAY_COLORS } from "@/config/holidayFeeds";
+
+// Holiday color constant
+const HOLIDAY_COLOR = HOLIDAY_COLORS.lebanon;
 
 interface CalendarViewNewProps {
   items: ItemWithDetails[];
@@ -27,6 +33,16 @@ export function CalendarViewNew({ items, onToggleComplete, onEdit, onDelete, cat
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
   const [selectedPriorities, setSelectedPriorities] = useState<Priority[]>([]);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  
+  // Special event filters (default: public holidays shown)
+  const [showPublicHolidays, setShowPublicHolidays] = useState(true);
+  const [showBirthdays, setShowBirthdays] = useState(false);
+  const [showAnniversaries, setShowAnniversaries] = useState(false);
+
+  // Load holidays dynamically from ICS feed
+  const { holidays: publicHolidays, loading: holidaysLoading, error: holidaysError } = useHolidays({
+    feeds: holidayFeeds
+  });
 
   // Filter items
   const filteredItems = useMemo(() => {
@@ -47,9 +63,9 @@ export function CalendarViewNew({ items, onToggleComplete, onEdit, onDelete, cat
     return filtered;
   }, [items, selectedTypes, selectedPriorities, selectedCategories]);
 
-  // Get items for a specific date
+  // Get items for a specific date (including holidays if enabled)
   const getItemsForDate = (date: Date) => {
-    return filteredItems.filter(item => {
+    const userItems = filteredItems.filter(item => {
       const itemDate = item.type === "event" && item.event_details?.start_at
         ? new Date(item.event_details.start_at)
         : item.type === "reminder" && item.reminder_details?.due_at
@@ -63,7 +79,44 @@ export function CalendarViewNew({ items, onToggleComplete, onEdit, onDelete, cat
         itemDate.getMonth() === date.getMonth() &&
         itemDate.getFullYear() === date.getFullYear()
       );
-    }).sort((a, b) => {
+    });
+
+    // Add public holidays if filter is enabled
+    let holidays: ItemWithDetails[] = [];
+    if (showPublicHolidays && publicHolidays.length > 0) {
+      const matchingHolidays = getHolidaysForDate(publicHolidays, date);
+
+      holidays = matchingHolidays.map(holiday => ({
+        id: `holiday-${holiday.id}`,
+        user_id: 'system',
+        title: `🇱🇧 ${holiday.title}`,
+        type: 'event' as const,
+        priority: 'normal' as Priority,
+        is_public: true,
+        responsible_user_id: 'system',
+        created_at: holiday.date.toISOString(),
+        updated_at: holiday.date.toISOString(),
+        event_details: {
+          item_id: `holiday-${holiday.id}`,
+          start_at: holiday.date.toISOString(),
+          end_at: new Date(holiday.date.getTime() + 24 * 60 * 60 * 1000).toISOString(),
+          all_day: true,
+          location_text: 'Lebanon'
+        },
+        categories: [{
+          id: 'public-holiday',
+          user_id: 'system',
+          name: 'Public Holiday',
+          color_hex: HOLIDAY_COLOR,
+          created_at: holiday.date.toISOString(),
+          updated_at: holiday.date.toISOString()
+        }]
+      } as ItemWithDetails));
+    }
+
+    // Combine and sort all items
+    const allItems = [...userItems, ...holidays];
+    return allItems.sort((a, b) => {
       const timeA = a.type === "event" ? new Date(a.event_details!.start_at).getTime() : 
                     a.reminder_details?.due_at ? new Date(a.reminder_details.due_at).getTime() : 0;
       const timeB = b.type === "event" ? new Date(b.event_details!.start_at).getTime() : 
@@ -163,10 +216,15 @@ export function CalendarViewNew({ items, onToggleComplete, onEdit, onDelete, cat
             <div>
               <h2 className="text-2xl font-bold text-gradient">Calendar</h2>
               <p className="text-sm text-muted-foreground">
-                {filteredItems.filter(i => {
-                  const d = i.type === "event" ? i.event_details?.start_at : i.reminder_details?.due_at;
-                  return d;
-                }).length} scheduled items
+                {(() => {
+                  const userItemCount = filteredItems.filter(i => {
+                    const d = i.type === "event" ? i.event_details?.start_at : i.reminder_details?.due_at;
+                    return d;
+                  }).length;
+                  const holidayCount = showPublicHolidays ? publicHolidays.length : 0;
+                  const loadingText = holidaysLoading ? ' (loading holidays...)' : '';
+                  return `${userItemCount + holidayCount} scheduled items${showPublicHolidays && holidayCount > 0 ? ` (incl. ${holidayCount} holidays)` : ''}${loadingText}`;
+                })()}
               </p>
             </div>
           </div>
@@ -212,6 +270,53 @@ export function CalendarViewNew({ items, onToggleComplete, onEdit, onDelete, cat
                     <X size={12} />
                     Clear all
                   </button>
+                </div>
+
+                {/* Special Events Filters */}
+                <div className="border-b border-border pb-3">
+                  <label className="text-xs text-muted-foreground mb-2 block">Special Events</label>
+                  <div className="flex flex-col gap-2">
+                    <label className="flex items-center gap-2 cursor-pointer group">
+                      <input
+                        type="checkbox"
+                        checked={showPublicHolidays}
+                        onChange={(e) => setShowPublicHolidays(e.target.checked)}
+                        className="w-4 h-4 rounded border-border text-primary focus:ring-primary focus:ring-offset-0"
+                      />
+                      <span className="text-xs font-medium group-hover:text-primary transition-colors flex items-center gap-1.5">
+                        🇱🇧 Public Holidays
+                        <span className="text-[10px] px-1.5 py-0.5 rounded" style={{ backgroundColor: HOLIDAY_COLOR, color: 'white' }}>
+                          Lebanon
+                        </span>
+                      </span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer group opacity-50">
+                      <input
+                        type="checkbox"
+                        checked={showBirthdays}
+                        onChange={(e) => setShowBirthdays(e.target.checked)}
+                        disabled
+                        className="w-4 h-4 rounded border-border text-primary focus:ring-primary focus:ring-offset-0"
+                      />
+                      <span className="text-xs font-medium flex items-center gap-1.5">
+                        🎂 Birthdays
+                        <span className="text-[9px] text-muted-foreground">(Coming soon)</span>
+                      </span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer group opacity-50">
+                      <input
+                        type="checkbox"
+                        checked={showAnniversaries}
+                        onChange={(e) => setShowAnniversaries(e.target.checked)}
+                        disabled
+                        className="w-4 h-4 rounded border-border text-primary focus:ring-primary focus:ring-offset-0"
+                      />
+                      <span className="text-xs font-medium flex items-center gap-1.5">
+                        💍 Anniversaries
+                        <span className="text-[9px] text-muted-foreground">(Coming soon)</span>
+                      </span>
+                    </label>
+                  </div>
                 </div>
 
                 {/* Type Filter */}
@@ -465,23 +570,56 @@ export function CalendarViewNew({ items, onToggleComplete, onEdit, onDelete, cat
 
                     <div className="space-y-2">
                       {getItemsForDate(selectedDay).length > 0 ? (
-                        getItemsForDate(selectedDay).map((item, idx) => (
-                          <motion.div
-                            key={item.id}
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: idx * 0.05 }}
-                          >
-                            <ItemCard
-                              item={item}
-                              onToggleComplete={onToggleComplete}
-                              onView={onEdit}
-                              onEdit={onEdit}
-                              onDelete={onDelete}
-                              viewDensity={viewDensity}
-                            />
-                          </motion.div>
-                        ))
+                        getItemsForDate(selectedDay).map((item, idx) => {
+                          const isHoliday = item.id.startsWith('holiday-');
+                          
+                          if (isHoliday) {
+                            // Special read-only display for holidays
+                            return (
+                              <motion.div
+                                key={item.id}
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: idx * 0.05 }}
+                                className="p-4 rounded-lg border-2"
+                                style={{ 
+                                  borderColor: HOLIDAY_COLOR,
+                                  backgroundColor: `${HOLIDAY_COLOR}10`
+                                }}
+                              >
+                                <div className="flex items-start gap-3">
+                                  <div className="text-2xl">🇱🇧</div>
+                                  <div className="flex-1">
+                                    <h4 className="font-bold text-base mb-1" style={{ color: HOLIDAY_COLOR }}>
+                                      {item.title.replace('🇱🇧 ', '')}
+                                    </h4>
+                                    <p className="text-sm text-muted-foreground">
+                                      Lebanese Public Holiday • All Day
+                                    </p>
+                                    {item.event_details?.location_text && (
+                                      <p className="text-xs text-muted-foreground mt-1">
+                                        📍 {item.event_details.location_text}
+                                      </p>
+                                    )}
+                                  </div>
+                                </div>
+                              </motion.div>
+                            );
+                          }
+                          
+                          return (
+                            <div key={item.id}>
+                              <ItemCard
+                                item={item}
+                                onToggleComplete={onToggleComplete}
+                                onView={onEdit}
+                                onEdit={onEdit}
+                                onDelete={onDelete}
+                                viewDensity={viewDensity}
+                              />
+                            </div>
+                          );
+                        })
                       ) : (
                         <div className="text-center py-8 text-muted-foreground">
                           No items scheduled for this day
