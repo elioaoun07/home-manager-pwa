@@ -80,7 +80,10 @@ export function CalendarViewNew({ items, onToggleComplete, onEdit, onDelete, cat
     if (viewMode === "month") {
       const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
       const startDate = new Date(firstDay);
-      startDate.setDate(startDate.getDate() - firstDay.getDay()); // Start from Sunday
+      // Start from Monday (1 = Monday, 0 = Sunday)
+      const dayOfWeek = firstDay.getDay();
+      const daysToSubtract = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+      startDate.setDate(startDate.getDate() - daysToSubtract);
       
       for (let i = 0; i < 35; i++) {
         dates.push(new Date(startDate));
@@ -88,7 +91,10 @@ export function CalendarViewNew({ items, onToggleComplete, onEdit, onDelete, cat
       }
     } else if (viewMode === "week") {
       const startOfWeek = new Date(today);
-      startOfWeek.setDate(today.getDate() - today.getDay()); // Sunday
+      // Start from Monday
+      const dayOfWeek = today.getDay();
+      const daysToSubtract = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+      startOfWeek.setDate(today.getDate() - daysToSubtract);
       
       for (let i = 0; i < 7; i++) {
         dates.push(new Date(startOfWeek));
@@ -345,15 +351,15 @@ export function CalendarViewNew({ items, onToggleComplete, onEdit, onDelete, cat
         {viewMode === "month" ? (
           <>
             {/* Day headers */}
-            <div className="grid grid-cols-7 gap-1.5 mb-2">
-              {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(day => (
-                <div key={day} className="text-center text-xs font-medium text-muted-foreground py-1.5">
+            <div className="grid grid-cols-7 gap-1 mb-1.5">
+              {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map(day => (
+                <div key={day} className="text-center text-[10px] font-semibold text-muted-foreground py-1">
                   {day}
                 </div>
               ))}
             </div>
-            {/* Month grid - Optimized for mobile */}
-            <div className="grid grid-cols-7 gap-1.5 mb-4">
+            {/* Month grid - Matches reference image styling */}
+            <div className="grid grid-cols-7 gap-1 mb-3">
               {dates.map((date, index) => {
                 const dayItems = getItemsForDate(date);
                 const isCurrentMonth = date.getMonth() === currentDate.getMonth();
@@ -372,45 +378,46 @@ export function CalendarViewNew({ items, onToggleComplete, onEdit, onDelete, cat
                         setSelectedDay(date);
                       }
                     }}
-                    className={`min-h-20 p-2 rounded-lg border transition-all cursor-pointer ${
+                    className={`min-h-16 p-1.5 rounded-lg border transition-all cursor-pointer overflow-hidden ${
                       isSelected
                         ? 'bg-primary/20 border-primary ring-2 ring-primary/50'
                         : isToday(date)
                         ? 'bg-primary/10 border-primary'
                         : isCurrentMonth
-                        ? 'bg-card border-border hover:border-primary/50 hover:shadow-md'
+                        ? 'bg-card border-border hover:border-primary/50 hover:shadow-sm'
                         : 'bg-muted/30 border-transparent text-muted-foreground'
                     }`}
                   >
-                    <div className={`text-sm font-semibold mb-1 ${isToday(date) || isSelected ? 'text-primary' : ''}`}>
-                      {date.getDate()}
-                    </div>
-                    {dayItems.length > 0 && (
-                      <div className="space-y-0.5">
-                        {dayItems.slice(0, 2).map(item => {
-                          const categoryColor = item.categories?.[0]?.color_hex || '#6366f1';
-                          return (
-                            <div
-                              key={item.id}
-                              className="text-[10px] px-1.5 py-0.5 rounded truncate pointer-events-none flex items-center gap-0.5"
-                              style={{ 
-                                backgroundColor: `${categoryColor}20`,
-                                borderLeft: `2px solid ${categoryColor}`,
-                                color: categoryColor
-                              }}
-                            >
-                              <span className="text-[8px]">{item.type === "event" ? "📅" : "⏰"}</span>
-                              <span className="font-medium">{item.title}</span>
-                            </div>
-                          );
-                        })}
-                        {dayItems.length > 2 && (
-                          <div className="text-[10px] text-muted-foreground pl-1">
-                            +{dayItems.length - 2} more
-                          </div>
-                        )}
+                    <div className="flex flex-col h-full">
+                      <div className={`text-xs font-bold mb-1 flex-shrink-0 ${isToday(date) || isSelected ? 'text-primary' : ''}`}>
+                        {date.getDate()}
                       </div>
-                    )}
+                      {dayItems.length > 0 && (
+                        <div className="space-y-0.5 flex-1 overflow-hidden">
+                          {dayItems.slice(0, 2).map(item => {
+                            const categoryColor = item.categories?.[0]?.color_hex || '#6366f1';
+                            return (
+                              <div
+                                key={item.id}
+                                className="text-[9px] px-1.5 py-0.5 rounded-md truncate font-semibold"
+                                style={{ 
+                                  backgroundColor: categoryColor,
+                                  color: 'white'
+                                }}
+                                title={item.title}
+                              >
+                                {item.title}
+                              </div>
+                            );
+                          })}
+                          {dayItems.length > 2 && (
+                            <div className="text-[8px] text-muted-foreground font-medium px-1">
+                              +{dayItems.length - 2}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </motion.button>
                 );
               })}
@@ -487,10 +494,10 @@ export function CalendarViewNew({ items, onToggleComplete, onEdit, onDelete, cat
             </AnimatePresence>
           </>
         ) : (
-          /* Horizontal Timeline view for Week/3Day - Outlook style */
-          <div className="space-y-3">
+          /* Horizontal Timeline view for Week/3Day - Optimized for mobile */
+          <div className="space-y-2 overflow-x-auto">
             {/* Day headers */}
-            <div className="grid gap-0.5 sticky top-0 bg-background z-10 pb-1 border-b-2" style={{ gridTemplateColumns: `60px repeat(${dates.length}, 1fr)` }}>
+            <div className="grid gap-px sticky top-0 bg-background z-10 pb-1 border-b-2" style={{ gridTemplateColumns: `32px repeat(${dates.length}, 1fr)`, minWidth: dates.length === 7 ? '100%' : 'auto' }}>
               <div className="border-r"></div> {/* Empty corner for time column */}
               {dates.map((date, index) => (
                 <div
@@ -517,31 +524,29 @@ export function CalendarViewNew({ items, onToggleComplete, onEdit, onDelete, cat
             {/* Timeline grid with hours */}
             <div className="space-y-0">
               {/* All day section */}
-              <div className="grid gap-0.5" style={{ gridTemplateColumns: `60px repeat(${dates.length}, 1fr)` }}>
-                <div className="flex items-center justify-end pr-2 text-[10px] font-medium text-muted-foreground py-1 border-r">
-                  All Day
+              <div className="grid gap-px" style={{ gridTemplateColumns: `32px repeat(${dates.length}, 1fr)`, minWidth: dates.length === 7 ? '100%' : 'auto' }}>
+                <div className="flex items-center justify-center text-[8px] font-bold text-muted-foreground py-1 border-r writing-mode-vertical">
+                  
                 </div>
                 {dates.map((date, dateIndex) => {
                   const allDayItems = getItemsForDate(date).filter(item => 
                     item.type === "event" && item.event_details?.all_day
                   );
                   return (
-                    <div key={dateIndex} className={`min-h-8 p-0.5 border-b border-r ${isToday(date) ? 'bg-primary/5' : ''}`}>
+                    <div key={dateIndex} className={`min-h-8 p-1 border-b border-r ${isToday(date) ? 'bg-primary/5' : ''}`}>
                       {allDayItems.map(item => {
                         const categoryColor = item.categories?.[0]?.color_hex || '#6366f1';
                         return (
                           <div
                             key={item.id}
                             onClick={() => onEdit(item)}
-                            className="text-[10px] px-1.5 py-0.5 mb-0.5 rounded cursor-pointer hover:opacity-80 truncate flex items-center gap-1"
+                            className="text-[10px] px-1.5 py-1 mb-1 rounded cursor-pointer hover:brightness-110 truncate font-semibold leading-tight"
                             style={{ 
-                              backgroundColor: `${categoryColor}20`,
-                              borderLeft: `3px solid ${categoryColor}`,
-                              color: categoryColor
+                              backgroundColor: categoryColor,
+                              color: 'white'
                             }}
                           >
-                            <span className="text-[8px]">📅</span>
-                            <span className="font-medium">{item.title}</span>
+                            {item.title}
                           </div>
                         );
                       })}
@@ -550,19 +555,16 @@ export function CalendarViewNew({ items, onToggleComplete, onEdit, onDelete, cat
                 })}
               </div>
 
-              {/* Hourly time slots (6 AM to 10 PM) */}
-              {Array.from({ length: 17 }, (_, i) => i + 6).map(hour => {
-                const displayHour = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour;
-                const period = hour >= 12 ? 'PM' : 'AM';
-                
+              {/* Hourly time slots (0 to 23 - 24 hour format) */}
+              {Array.from({ length: 24 }, (_, i) => i).map(hour => {
                 return (
                   <div
                     key={hour}
-                    className="grid gap-0.5"
-                    style={{ gridTemplateColumns: `60px repeat(${dates.length}, 1fr)` }}
+                    className="grid gap-px"
+                    style={{ gridTemplateColumns: `32px repeat(${dates.length}, 1fr)`, minWidth: dates.length === 7 ? '100%' : 'auto' }}
                   >
-                    <div className="flex items-start justify-end pr-2 text-[10px] text-muted-foreground font-medium pt-0.5 border-r">
-                      {displayHour}:00 {period}
+                    <div className="flex items-start justify-center text-[9px] text-muted-foreground font-bold pt-1 border-r">
+                      {hour.toString().padStart(2, '0')}
                     </div>
                     {dates.map((date, dateIndex) => {
                       const hourItems = getItemsForDate(date).filter(item => {
@@ -580,11 +582,11 @@ export function CalendarViewNew({ items, onToggleComplete, onEdit, onDelete, cat
                       return (
                         <div
                           key={dateIndex}
-                          className={`min-h-12 p-0.5 border-b border-r ${
+                          className={`min-h-16 p-1 border-b border-r ${
                             isToday(date) ? 'bg-primary/5' : ''
                           } hover:bg-muted/30 transition-colors relative overflow-hidden`}
                         >
-                          <div className="space-y-0.5 w-full">
+                          <div className="space-y-1 w-full">
                             {hourItems.map(item => {
                               const categoryColor = item.categories?.[0]?.color_hex || '#6366f1';
                               const startTime = item.type === "event" && item.event_details
@@ -608,41 +610,22 @@ export function CalendarViewNew({ items, onToggleComplete, onEdit, onDelete, cat
                                 <div
                                   key={item.id}
                                   onClick={() => onEdit(item)}
-                                  className="text-[10px] px-1.5 py-1 rounded cursor-pointer hover:opacity-80 transition-all relative overflow-hidden w-full max-w-full"
+                                  className="text-[10px] px-1.5 py-1.5 mb-1 rounded cursor-pointer hover:brightness-110 transition-all w-full leading-tight"
                                   style={{ 
-                                    backgroundColor: `${categoryColor}15`,
-                                    borderLeft: `3px solid ${categoryColor}`,
-                                    color: categoryColor
+                                    backgroundColor: categoryColor,
+                                    color: 'white'
                                   }}
                                 >
-                                  {/* Duration indicator bar (vertical stripe pattern for long events) */}
-                                  {showDurationBar && (
-                                    <div 
-                                      className="absolute top-0 right-0 bottom-0 w-1 opacity-40"
-                                      style={{ 
-                                        backgroundColor: categoryColor,
-                                        height: '100%'
-                                      }}
-                                    />
-                                  )}
-                                  
-                                  <div className="font-medium flex items-center gap-1 min-w-0">
-                                    <span className="text-[8px] flex-shrink-0">{item.type === "event" ? "📅" : "⏰"}</span>
-                                    <span className="flex-1 truncate min-w-0">{item.title}</span>
-                                    {showDurationBar && (
-                                      <span className="text-[8px] opacity-60 flex-shrink-0">{duration}h</span>
-                                    )}
+                                  <div className="font-semibold line-clamp-2">
+                                    {item.title}
                                   </div>
                                   {startTime && (
-                                    <div className="text-[9px] opacity-70 ml-3 truncate">
+                                    <div className="text-[8px] opacity-80 mt-0.5">
                                       {startTime.toLocaleTimeString('en-US', { 
-                                        hour: 'numeric', 
-                                        minute: '2-digit' 
+                                        hour: '2-digit', 
+                                        minute: '2-digit',
+                                        hour12: false
                                       })}
-                                      {endTime && ` - ${endTime.toLocaleTimeString('en-US', { 
-                                        hour: 'numeric', 
-                                        minute: '2-digit' 
-                                      })}`}
                                     </div>
                                   )}
                                 </div>
@@ -655,41 +638,6 @@ export function CalendarViewNew({ items, onToggleComplete, onEdit, onDelete, cat
                   </div>
                 );
               })}
-
-              {/* Items without specific time (reminders without due_at shown at bottom) */}
-              <div className="grid gap-0.5 mt-2" style={{ gridTemplateColumns: `60px repeat(${dates.length}, 1fr)` }}>
-                <div className="flex items-center justify-end pr-2 text-[10px] font-medium text-muted-foreground py-1 border-r">
-                  No Time
-                </div>
-                {dates.map((date, dateIndex) => {
-                  const noTimeItems = getItemsForDate(date).filter(item => {
-                    if (item.type === "event") return false; // Events always have time
-                    return !item.reminder_details?.due_at; // Notes without due time
-                  });
-                  return (
-                    <div key={dateIndex} className={`min-h-8 p-0.5 border-b border-r ${isToday(date) ? 'bg-primary/5' : ''}`}>
-                      {noTimeItems.map(item => {
-                        const categoryColor = item.categories?.[0]?.color_hex || '#6366f1';
-                        return (
-                          <div
-                            key={item.id}
-                            onClick={() => onEdit(item)}
-                            className="text-[10px] px-1.5 py-0.5 mb-0.5 rounded cursor-pointer hover:opacity-80 truncate flex items-center gap-1"
-                            style={{ 
-                              backgroundColor: `${categoryColor}20`,
-                              borderLeft: `3px solid ${categoryColor}`,
-                              color: categoryColor
-                            }}
-                          >
-                            <span className="text-[8px]">📝</span>
-                            <span className="font-medium">{item.title}</span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  );
-                })}
-              </div>
             </div>
           </div>
         )}
