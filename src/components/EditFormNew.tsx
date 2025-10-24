@@ -118,6 +118,32 @@ export function EditFormNew({ item, categories, onSave, onCancel }: EditFormProp
     });
   }, [formData.type]);
 
+  // When user updates the start date via the input, if start becomes after end,
+  // automatically bump end date to start + 1 day to avoid invalid ranges.
+  const handleStartDateChange = (value: string) => {
+    setStartDate(value);
+
+    if (!value) return;
+
+    try {
+      if (endDate) {
+        const s = new Date(value);
+        const e = new Date(endDate);
+        // compare dates at midnight to ignore time-of-day
+        s.setHours(0, 0, 0, 0);
+        e.setHours(0, 0, 0, 0);
+        if (s.getTime() > e.getTime()) {
+          const newEnd = new Date(s);
+          newEnd.setDate(newEnd.getDate() + 1);
+          setEndDate(newEnd.toISOString().split('T')[0]);
+        }
+      }
+    } catch (err) {
+      // defensive: if parsing fails, do nothing
+      console.error('Invalid date while handling start-date change', err);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -549,7 +575,7 @@ export function EditFormNew({ item, categories, onSave, onCancel }: EditFormProp
                         id="start-date-input"
                         type="date"
                         value={startDate}
-                        onChange={(e) => setStartDate(e.target.value)}
+                        onChange={(e) => handleStartDateChange(e.target.value)}
                         className="absolute inset-0 opacity-0 cursor-pointer"
                         required
                       />
