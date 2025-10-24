@@ -1,0 +1,29 @@
+{
+  "metadata": {
+    "generated": "2025-10-24T13:55:32.314Z",
+    "project": "personalAI",
+    "reference_id": "kqqdbauojjeatvftxluz"
+  },
+  "tables": {
+    "items": {
+      "row_count": 0,
+      "columns": [],
+      "sample_data": []
+    },
+    "item_categories": {
+      "row_count": 0,
+      "columns": [],
+      "sample_data": []
+    },
+    "categories": {
+      "row_count": 0,
+      "columns": [],
+      "sample_data": []
+    },
+    "alerts": {
+      "row_count": 0,
+      "columns": [],
+      "sample_data": []
+    }
+  }
+}

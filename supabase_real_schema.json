@@ -1,0 +1,26 @@
+{
+  "metadata": {
+    "exported_at": "2025-10-24T14:05:18.104Z",
+    "project": "personalAI",
+    "reference_id": "kqqdbauojjeatvftxluz",
+    "method": "direct_api_query"
+  },
+  "tables": {
+    "items": {
+      "row_count": 0,
+      "accessible": true
+    },
+    "categories": {
+      "row_count": 0,
+      "accessible": true
+    },
+    "item_categories": {
+      "row_count": 0,
+      "accessible": true
+    },
+    "alerts": {
+      "row_count": 0,
+      "accessible": true
+    }
+  }
+}

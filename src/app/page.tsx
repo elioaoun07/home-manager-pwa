@@ -28,6 +28,7 @@ import {
   getCategories,
   createCategory
 } from "@/lib/database";
+import { saveAlarms } from "@/lib/alertManager";
 import { enhanceCategoriesWithKeywords } from "@/config/categoryKeywords";
 
 function HomeContent() {
@@ -219,6 +220,8 @@ function HomeContent() {
     subtasks?: Array<{ title: string; order_index: number }>;
     event_details?: Record<string, unknown>;
     reminder_details?: Record<string, unknown>;
+    alarms?: Array<{ type: 'relative' | 'absolute'; offset_minutes?: number; absolute_time?: string; channel: 'push' | 'email' | 'sms' }>;
+    eventStartTime?: Date;
   }) => {
     try {
       // Validate event-specific required fields
@@ -236,6 +239,11 @@ function HomeContent() {
         // Handle event details
         if (data.type === "event" && data.event_details) {
           await upsertEventDetails({ ...data.event_details, item_id: editingItem.id });
+          
+          // Handle alarms for events
+          if (data.alarms && data.eventStartTime) {
+            await saveAlarms(editingItem.id, data.eventStartTime, data.alarms);
+          }
         }
         
         // Handle reminder details
@@ -260,6 +268,11 @@ function HomeContent() {
         // Handle event details
         if (data.type === "event" && data.event_details) {
           await upsertEventDetails({ ...data.event_details, item_id: newItem.id });
+          
+          // Handle alarms for events
+          if (data.alarms && data.eventStartTime) {
+            await saveAlarms(newItem.id, data.eventStartTime, data.alarms);
+          }
         }
         
         // Handle reminder details
@@ -433,23 +446,17 @@ function HomeContent() {
           onToggleComplete={handleToggleComplete}
         />
 
-        {/* Edit Drawer */}
-        <DrawerContent>
-          <div className="px-4 pb-8">
-            <DrawerTitle className="text-xl font-bold mb-4">
-              {editingItem?.id ? "Edit Item" : "Create Item"}
-            </DrawerTitle>
-            <DrawerDescription className="sr-only">
-              {editingItem?.id ? "Edit an existing item" : "Create a new reminder or event"}
-            </DrawerDescription>
+        {/* Edit Form Modal */}
+        <AnimatePresence>
+          {isDrawerOpen && (
             <EditFormNew
               item={editingItem}
               categories={categories}
               onSave={handleSaveEdit}
               onCancel={handleCancelEdit}
             />
-          </div>
-        </DrawerContent>
+          )}
+        </AnimatePresence>
       </div>
     </Drawer>
   );
