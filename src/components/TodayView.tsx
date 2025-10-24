@@ -18,8 +18,8 @@ interface TodayViewProps {
 export function TodayView({ items, onToggleComplete, onEdit, onDelete, viewDensity = "comfy" }: TodayViewProps) {
   const today = new Date();
   
-  // State for collapsible sections
-  const [collapsedSections, setCollapsedSections] = useState<Set<string>>(new Set(["overdue"]));
+  // State for collapsible sections (collapsed by default: overdue, completed)
+  const [collapsedSections, setCollapsedSections] = useState<Set<string>>(new Set(["overdue", "completed"]));
 
   const toggleSection = (sectionName: string) => {
     setCollapsedSections(prev => {
@@ -42,18 +42,21 @@ export function TodayView({ items, onToggleComplete, onEdit, onDelete, viewDensi
 
   const morningItems = todayItems.filter((item) => {
     const date = getItemDate(item);
-    return date && getTimeOfDay(date) === "morning";
+    return date && getTimeOfDay(date) === "morning" && item.status !== 'done';
   });
 
   const afternoonItems = todayItems.filter((item) => {
     const date = getItemDate(item);
-    return date && getTimeOfDay(date) === "afternoon";
+    return date && getTimeOfDay(date) === "afternoon" && item.status !== 'done';
   });
 
   const eveningItems = todayItems.filter((item) => {
     const date = getItemDate(item);
-    return date && getTimeOfDay(date) === "evening";
+    return date && getTimeOfDay(date) === "evening" && item.status !== 'done';
   });
+
+  // Completed items for Today (show in collapsed container by default)
+  const completedItems = todayItems.filter(i => i.status === 'done');
 
   const completedToday = todayItems.filter(i => i.status === 'done').length;
   const totalToday = todayItems.length;
@@ -304,6 +307,13 @@ export function TodayView({ items, onToggleComplete, onEdit, onDelete, viewDensi
         eveningItems, 
         <Moon size={20} className="text-white" />,
         "from-primary to-primary/70"
+      )}
+
+      {renderSection(
+        "Completed",
+        completedItems,
+        <Trophy size={20} className="text-white" />,
+        "from-success to-success/70"
       )}
     </div>
   );
