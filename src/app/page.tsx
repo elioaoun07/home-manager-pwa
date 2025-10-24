@@ -16,24 +16,26 @@ import { SettingsSidebar, ViewDensity } from "@/components/SettingsSidebar";
 import { Drawer } from "@/components/ui/drawer";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
-import { 
-  getItems, 
-  createItem, 
-  updateItem, 
+import {
+  getItems,
+  createItem,
+  updateItem,
   deleteItem,
   upsertEventDetails,
   upsertReminderDetails,
   setItemCategories,
   createSubtask,
   getCategories,
-  createCategory
+  createCategory,
 } from "@/lib/database";
 import { saveAlarms } from "@/lib/alertManager";
 import { enhanceCategoriesWithKeywords } from "@/config/categoryKeywords";
 
 function HomeContent() {
   const [items, setItems] = useState<ItemWithDetails[]>([]);
-  const [categories, setCategories] = useState<{ id: string; name: string; color_hex?: string }[]>([]);
+  const [categories, setCategories] = useState<
+    { id: string; name: string; color_hex?: string }[]
+  >([]);
   const [currentView, setCurrentView] = useState<ViewType>("today");
   const [editingItem, setEditingItem] = useState<ItemWithDetails | null>(null);
   const [viewingItem, setViewingItem] = useState<ItemWithDetails | null>(null);
@@ -61,28 +63,32 @@ function HomeContent() {
   const loadCategories = async () => {
     try {
       const data = await getCategories();
-      
+
       // If no categories exist, create default ones
       if (!data || data.length === 0) {
         const defaultCategories = [
-          { name: 'Personal', color_hex: '#8B5CF6', position: 0 },
-          { name: 'Work', color_hex: '#3B82F6', position: 1 },
-          { name: 'Family', color_hex: '#EC4899', position: 2 },
-          { name: 'Home', color_hex: '#10B981', position: 3 },
-          { name: 'Health', color_hex: '#F59E0B', position: 4 },
-          { name: 'Finance', color_hex: '#EF4444', position: 5 }
+          { name: "Personal", color_hex: "#8B5CF6", position: 0 },
+          { name: "Work", color_hex: "#3B82F6", position: 1 },
+          { name: "Family", color_hex: "#EC4899", position: 2 },
+          { name: "Home", color_hex: "#10B981", position: 3 },
+          { name: "Health", color_hex: "#F59E0B", position: 4 },
+          { name: "Finance", color_hex: "#EF4444", position: 5 },
         ];
-        
+
         const created = [];
         for (const cat of defaultCategories) {
           try {
-            const newCat = await createCategory(cat.name, cat.color_hex, cat.position);
+            const newCat = await createCategory(
+              cat.name,
+              cat.color_hex,
+              cat.position
+            );
             created.push(newCat);
           } catch (err) {
             console.error(`Failed to create category ${cat.name}:`, err);
           }
         }
-        
+
         setCategories(created);
       } else {
         setCategories(data);
@@ -96,9 +102,11 @@ function HomeContent() {
   useEffect(() => {
     loadItems();
     loadCategories();
-    
+
     // Load view density from localStorage
-    const savedDensity = localStorage.getItem("viewDensity") as ViewDensity | null;
+    const savedDensity = localStorage.getItem("viewDensity") as
+      | ViewDensity
+      | null;
     if (savedDensity === "compact" || savedDensity === "comfy") {
       setViewDensity(savedDensity);
     }
@@ -123,8 +131,11 @@ function HomeContent() {
       if (parsed.type === "event" && (parsed.startTime || parsed.time)) {
         await upsertEventDetails({
           item_id: newItem.id,
-          start_at: (parsed.startTime || parsed.time || new Date()).toISOString(),
-          end_at: parsed.endTime?.toISOString() || (parsed.startTime || parsed.time || new Date()).toISOString(),
+          start_at:
+            (parsed.startTime || parsed.time || new Date()).toISOString(),
+          end_at:
+            parsed.endTime?.toISOString() ||
+            (parsed.startTime || parsed.time || new Date()).toISOString(),
           all_day: parsed.allDay || false,
         });
       } else if (parsed.type === "reminder" && parsed.time) {
@@ -137,13 +148,12 @@ function HomeContent() {
 
       // Set categories if any
       if (parsed.categories && parsed.categories.length > 0) {
-        // You'll need to create categories first or fetch existing ones
-        // For now, we'll skip this - you can implement category creation
+        // (left as-is)
       }
 
       // Reload items
       await loadItems();
-      
+
       toast.success(
         <div className="flex items-center gap-2">
           <span className="font-semibold">{newItem.title}</span>
@@ -163,12 +173,10 @@ function HomeContent() {
     try {
       const newStatus: ItemStatus = item.status === "done" ? "pending" : "done";
       await updateItem(id, { status: newStatus });
-      
+
       // Update local state optimistically
       setItems((prev) =>
-        prev.map((i) =>
-          i.id === id ? { ...i, status: newStatus } : i
-        )
+        prev.map((i) => (i.id === id ? { ...i, status: newStatus } : i))
       );
 
       toast.success(
@@ -202,7 +210,7 @@ function HomeContent() {
     try {
       await deleteItem(id);
       setItems((prev) => prev.filter((i) => i.id !== id));
-      
+
       toast.error(
         <div className="flex items-center gap-2">
           <span className="font-semibold">{item.title}</span>
@@ -215,14 +223,21 @@ function HomeContent() {
     }
   };
 
-  const handleSaveEdit = async (data: Partial<ItemWithDetails> & { 
-    categories?: string[]; 
-    subtasks?: Array<{ title: string; order_index: number }>;
-    event_details?: Record<string, unknown>;
-    reminder_details?: Record<string, unknown>;
-    alarms?: Array<{ type: 'relative' | 'absolute'; offset_minutes?: number; absolute_time?: string; channel: 'push' | 'email' | 'sms' }>;
-    eventStartTime?: Date;
-  }) => {
+  const handleSaveEdit = async (
+    data: Partial<ItemWithDetails> & {
+      categories?: string[];
+      subtasks?: Array<{ title: string; order_index: number }>;
+      event_details?: Record<string, unknown>;
+      reminder_details?: Record<string, unknown>;
+      alarms?: Array<{
+        type: "relative" | "absolute";
+        offset_minutes?: number;
+        absolute_time?: string;
+        channel: "push" | "email" | "sms";
+      }>;
+      eventStartTime?: Date;
+    }
+  ) => {
     try {
       // Validate event-specific required fields
       if (data.type === "event") {
@@ -235,84 +250,91 @@ function HomeContent() {
       if (editingItem?.id) {
         // Update existing item
         await updateItem(editingItem.id, data);
-        
+
         // Handle event details
         if (data.type === "event" && data.event_details) {
-          await upsertEventDetails({ ...data.event_details, item_id: editingItem.id });
-          
+          await upsertEventDetails({
+            ...(data.event_details as any),
+            item_id: editingItem.id,
+          });
+
           // Handle alarms for events
           if (data.alarms && data.eventStartTime) {
             await saveAlarms(editingItem.id, data.eventStartTime, data.alarms);
           }
         }
-        
+
         // Handle reminder details
         if (data.type === "reminder" && data.reminder_details) {
-          await upsertReminderDetails({ 
-            ...data.reminder_details, 
+          await upsertReminderDetails({
+            ...(data.reminder_details as any),
             item_id: editingItem.id,
-            has_checklist: (data.subtasks?.length ?? 0) > 0
+            has_checklist: (data.subtasks?.length ?? 0) > 0,
           });
         }
-        
+
         // Handle categories for update
         if (data.categories && data.categories.length > 0) {
           await setItemCategories(editingItem.id, data.categories);
         }
-        
+
         toast.success("Item updated successfully!");
       } else {
         // Create new item
         const newItem = await createItem(data);
-        
+
         // Handle event details
         if (data.type === "event" && data.event_details) {
-          await upsertEventDetails({ ...data.event_details, item_id: newItem.id });
-          
+          await upsertEventDetails({
+            ...(data.event_details as any),
+            item_id: newItem.id,
+          });
+
           // Handle alarms for events
           if (data.alarms && data.eventStartTime) {
             await saveAlarms(newItem.id, data.eventStartTime, data.alarms);
           }
         }
-        
+
         // Handle reminder details
         if (data.type === "reminder" && data.reminder_details) {
-          await upsertReminderDetails({ 
-            ...data.reminder_details, 
+          await upsertReminderDetails({
+            ...(data.reminder_details as any),
             item_id: newItem.id,
-            has_checklist: (data.subtasks?.length ?? 0) > 0
+            has_checklist: (data.subtasks?.length ?? 0) > 0,
           });
         }
-        
+
         // Handle subtasks
         if (data.subtasks && data.subtasks.length > 0) {
           for (const subtask of data.subtasks) {
             await createSubtask({ ...subtask, parent_item_id: newItem.id });
           }
         }
-        
+
         // Handle categories
         if (data.categories && data.categories.length > 0) {
           await setItemCategories(newItem.id, data.categories);
         }
-        
+
         toast.success("Item created successfully!");
       }
-      
+
       // Reload items after save
       await loadItems();
       setIsDrawerOpen(false);
       setEditingItem(null);
     } catch (error) {
       console.error("Error saving item:", error);
-      // Log detailed error information
-      if (error && typeof error === 'object') {
+      if (error && typeof error === "object") {
         console.error("Error details:", JSON.stringify(error, null, 2));
       }
-      const errorMessage = error instanceof Error ? error.message : 
-                          (error && typeof error === 'object' && 'message' in error) ? 
-                          String(error.message) : 
-                          "Failed to save item";
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : error && typeof error === "object" && "message" in error
+          ? String((error as any).message)
+          : "Failed to save item";
       toast.error(errorMessage);
     }
   };
@@ -327,38 +349,90 @@ function HomeContent() {
     setIsDrawerOpen(true);
   };
 
+  // ---- Counts for BottomNav badges ----
+  const { todayItemsCount, activeNotesCount } = useMemo(() => {
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const todayEnd = new Date();
+    todayEnd.setHours(23, 59, 59, 999);
+
+    const inToday = (d: Date | string | null | undefined) => {
+      if (!d) return false;
+      const dt = d instanceof Date ? d : new Date(d);
+      const t = dt.getTime();
+      return t >= todayStart.getTime() && t <= todayEnd.getTime();
+    };
+
+    const overlapsToday = (
+      start: Date | string | null | undefined,
+      end: Date | string | null | undefined
+    ) => {
+      if (!start) return false;
+      const s = start instanceof Date ? start : new Date(start);
+      const e = end != null ? (end instanceof Date ? end : new Date(end)) : s;
+      const sT = s.getTime();
+      const eT = e.getTime();
+      return sT <= todayEnd.getTime() && eT >= todayStart.getTime();
+    };
+
+    let tCount = 0;
+    let nCount = 0;
+
+    for (const it of items) {
+      const type = (it as any).type;
+      const status = (it as any).status;
+
+      // TODAY: pending events that overlap today OR reminders that are due today OR OVERDUE
+      if (status !== "done") {
+        const e = (it as any).event_details;
+        const r = (it as any).reminder_details;
+
+        const isEventToday =
+          e && (overlapsToday(e.start_at, e.end_at) || (e.all_day && inToday(e.start_at)));
+
+        // NEW: include overdue reminders too (<= end of today covers overdue + due today)
+        const isReminderDueOrOverdue =
+          r?.due_at ? new Date(r.due_at).getTime() <= todayEnd.getTime() : false;
+
+        if (isEventToday || isReminderDueOrOverdue) tCount++;
+      }
+
+      // NOTES: note items, or reminder with no due_at (note-like)
+      const r2 = (it as any).reminder_details;
+      const isNoteLike = type === "note" || (type === "reminder" && (!r2 || !r2.due_at));
+      if (isNoteLike) nCount++;
+    }
+
+    return { todayItemsCount: tCount, activeNotesCount: nCount };
+  }, [items]);
+  // -----------------------------------------
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="text-center"
-        >
+        <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="text-center">
           <motion.div
             animate={{ rotate: 360 }}
             transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
             className="w-16 h-16 mx-auto mb-4 rounded-full border-4 border-primary border-t-transparent"
           />
-          <p className="text-muted-foreground text-lg font-medium">Loading your tasks...</p>
+          <p className="text-muted-foreground text-lg font-medium">
+            Loading your tasks...
+          </p>
         </motion.div>
       </div>
     );
   }
 
   return (
-    <Drawer
-      open={isDrawerOpen}
-      onOpenChange={setIsDrawerOpen}
-      onClose={handleCancelEdit}
-    >
+    <Drawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen} onClose={handleCancelEdit}>
       <div className="min-h-screen bg-background relative overflow-hidden">
         {/* Animated background */}
         <div className="fixed inset-0 gradient-mesh opacity-30 pointer-events-none" />
         <div className="fixed inset-0 bg-[radial-gradient(circle_at_50%_120%,hsl(var(--primary)/0.1),transparent_50%)] pointer-events-none" />
 
-        <QuickAdd 
-          onAdd={handleQuickAdd} 
+        <QuickAdd
+          onAdd={handleQuickAdd}
           categories={enhancedCategories}
           onOpenSettings={() => setIsSettingsSidebarOpen(true)}
         />
@@ -370,7 +444,9 @@ function HomeContent() {
           onViewDensityChange={(density) => {
             setViewDensity(density);
             localStorage.setItem("viewDensity", density);
-            toast.success(`View changed to ${density === "compact" ? "Compact" : "Comfy"}`);
+            toast.success(
+              `View changed to ${density === "compact" ? "Compact" : "Comfy"}`
+            );
           }}
         />
 
@@ -430,7 +506,12 @@ function HomeContent() {
           </AnimatePresence>
         </main>
 
-        <BottomNav currentView={currentView} onViewChange={setCurrentView} />
+        <BottomNav
+          currentView={currentView}
+          onViewChange={setCurrentView}
+          todayCount={todayItemsCount}   // 1–9 or "9+"
+          notesCount={activeNotesCount}  // 1–9 or "9+"
+        />
         {!isDrawerOpen && <FAB onClick={handleFABClick} />}
 
         {/* View Details Drawer */}
@@ -463,9 +544,5 @@ function HomeContent() {
 }
 
 export default function Home() {
-  return (
-    <AuthWrapper>
-      {() => <HomeContent />}
-    </AuthWrapper>
-  );
+  return <AuthWrapper>{() => <HomeContent />}</AuthWrapper>;
 }

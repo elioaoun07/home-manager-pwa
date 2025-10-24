@@ -1,16 +1,34 @@
+// src/components/BottomNav.tsx
 "use client";
 
 import { ViewType } from "@/types";
 import { Calendar, ListTodo, Sparkles, StickyNote } from "lucide-react";
 import { motion } from "framer-motion";
 
+function capCount(count?: number): string | null {
+  if (!count || count <= 0) return null;
+  return count > 9 ? "9+" : String(count);
+}
+
 interface BottomNavProps {
   currentView: ViewType;
   onViewChange: (view: ViewType) => void;
+  /** New (optional): counts for badges */
+  todayCount?: number;
+  notesCount?: number;
 }
 
-export function BottomNav({ currentView, onViewChange }: BottomNavProps) {
-  const navItems: { view: ViewType; label: string; icon: React.ElementType }[] = [
+export function BottomNav({
+  currentView,
+  onViewChange,
+  todayCount = 0,
+  notesCount = 0,
+}: BottomNavProps) {
+  const navItems: {
+    view: ViewType;
+    label: string;
+    icon: React.ElementType;
+  }[] = [
     { view: "today", label: "Today", icon: Sparkles },
     { view: "upcoming", label: "Upcoming", icon: ListTodo },
     { view: "notes", label: "Notes", icon: StickyNote },
@@ -27,12 +45,17 @@ export function BottomNav({ currentView, onViewChange }: BottomNavProps) {
       {/* Glass background with gradient */}
       <div className="relative glass-strong border-t border-white/10 dark:border-gray-700/50 shadow-elevated-lg">
         <div className="absolute inset-0 bg-gradient-to-t from-primary/5 via-transparent to-transparent" />
-        
+
         <div className="relative flex justify-around px-2 py-2">
           {navItems.map((item, index) => {
             const Icon = item.icon;
             const isActive = currentView === item.view;
-            
+
+            // Only Today and Notes get badges
+            let displayCount: string | null = null;
+            if (item.view === "today") displayCount = capCount(todayCount);
+            if (item.view === "notes") displayCount = capCount(notesCount);
+
             return (
               <motion.button
                 key={item.view}
@@ -44,10 +67,9 @@ export function BottomNav({ currentView, onViewChange }: BottomNavProps) {
                 className={`
                   relative flex-1 flex flex-col items-center gap-1 py-2 px-3 rounded-2xl
                   transition-all duration-300
-                  ${isActive 
-                    ? 'text-primary' 
-                    : 'text-muted-foreground hover:text-foreground'
-                  }
+                  ${isActive
+                    ? "text-primary"
+                    : "text-muted-foreground hover:text-foreground"}
                 `}
               >
                 {/* Active indicator */}
@@ -58,24 +80,32 @@ export function BottomNav({ currentView, onViewChange }: BottomNavProps) {
                     transition={{ type: "spring", stiffness: 400, damping: 30 }}
                   />
                 )}
-                
-                {/* Icon */}
-                <motion.div
-                  animate={{
-                    scale: isActive ? [1, 1.2, 1] : 1,
-                    rotate: isActive ? [0, -10, 10, 0] : 0,
-                  }}
-                  transition={{ duration: 0.5 }}
-                  className="relative z-10"
-                >
-                  <Icon size={24} strokeWidth={isActive ? 2.5 : 2} />
-                </motion.div>
-                
+
+                {/* Icon + badge wrapper (badge anchors to icon) */}
+                <div className="relative z-10">
+                  <motion.div
+                    animate={{
+                      scale: isActive ? [1, 1.2, 1] : 1,
+                      rotate: isActive ? [0, -10, 10, 0] : 0,
+                    }}
+                    transition={{ duration: 0.5 }}
+                  >
+                    <Icon size={24} strokeWidth={isActive ? 2.5 : 2} />
+                  </motion.div>
+
+                  {displayCount && (
+                    <span
+                      aria-hidden="true"
+                      className="absolute -top-1.5 -right-3 h-4 min-w-[16px] px-1 rounded-full text-white text-[10px] leading-4 flex items-center justify-center shadow-lg z-20 bg-gradient-to-br from-blue-500 to-purple-600 border border-white/10"
+                    >
+                      {displayCount}
+                    </span>
+                  )}
+                </div>
+
                 {/* Label */}
                 <motion.span
-                  animate={{
-                    fontWeight: isActive ? 600 : 500,
-                  }}
+                  animate={{ fontWeight: isActive ? 600 : 500 }}
                   className="relative z-10 text-xs"
                 >
                   {item.label}
