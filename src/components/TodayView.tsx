@@ -19,7 +19,7 @@ export function TodayView({ items, onToggleComplete, onEdit, onDelete, viewDensi
   const today = new Date();
   
   // State for collapsible sections
-  const [collapsedSections, setCollapsedSections] = useState<Set<string>>(new Set());
+  const [collapsedSections, setCollapsedSections] = useState<Set<string>>(new Set(["overdue"]));
 
   const toggleSection = (sectionName: string) => {
     setCollapsedSections(prev => {
