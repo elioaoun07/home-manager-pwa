@@ -2,8 +2,9 @@
 
 import { ItemWithDetails } from "@/types";
 import { ItemCard } from "./ItemCard";
-import { motion } from "framer-motion";
-import { StickyNote } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { useState } from "react";
+import { StickyNote, Trophy, ChevronDown } from "lucide-react";
 
 interface NotesViewProps {
   items: ItemWithDetails[];
@@ -19,6 +20,43 @@ export function NotesView({ items, onToggleComplete, onEdit, onDelete, viewDensi
   const notes = items.filter(item => 
     item.type === "reminder" && !item.reminder_details?.due_at
   );
+
+  // Collapsible state: Completed container collapsed by default
+  const [collapsedSections, setCollapsedSections] = useState<Set<string>>(new Set(["completed"]));
+
+  const toggleSection = (sectionName: string) => {
+    setCollapsedSections(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(sectionName)) newSet.delete(sectionName);
+      else newSet.add(sectionName);
+      return newSet;
+    });
+  };
+
+  // Helper to detect if a date is within the current week (Monday-start)
+  const isDateInCurrentWeek = (d: Date) => {
+    const now = new Date();
+    // compute Monday of current week
+    const day = now.getDay(); // 0 (Sun) - 6 (Sat)
+    const daysSinceMonday = (day + 6) % 7; // 0 for Monday
+    const start = new Date(now);
+    start.setHours(0,0,0,0);
+    start.setDate(now.getDate() - daysSinceMonday);
+    const end = new Date(start);
+    end.setDate(start.getDate() + 7);
+    return d >= start && d < end;
+  };
+
+  // Open notes: all non-done notes (regardless of creation date)
+  const openNotes = notes.filter(n => n.status !== 'done');
+
+  // Completed notes: only notes that are done and created within the current week
+  const completedNotes = notes.filter(n => {
+    if (n.status !== 'done') return false;
+    if (!n.created_at) return false;
+    const created = new Date(n.created_at);
+    return isDateInCurrentWeek(created);
+  });
 
   return (
     <div className="space-y-4 pb-24">
@@ -41,7 +79,7 @@ export function NotesView({ items, onToggleComplete, onEdit, onDelete, viewDensi
 
       {/* Notes List */}
       <div className="space-y-2">
-        {notes.length === 0 ? (
+        {openNotes.length === 0 ? (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -56,7 +94,7 @@ export function NotesView({ items, onToggleComplete, onEdit, onDelete, viewDensi
             </p>
           </motion.div>
         ) : (
-          notes.map((item, index) => (
+          openNotes.map((item, index) => (
             <motion.div
               key={item.id}
               initial={{ opacity: 0, y: 20 }}
@@ -75,6 +113,64 @@ export function NotesView({ items, onToggleComplete, onEdit, onDelete, viewDensi
           ))
         )}
       </div>
+
+      {/* Completed Notes (collapsed by default) - placed at bottom */}
+      {completedNotes.length > 0 && (
+        <motion.div className="mt-6">
+          <motion.button
+            onClick={() => toggleSection('completed')}
+            className="w-full flex items-center gap-3 mb-3 px-4 py-3 rounded-2xl glass border border-white/10 dark:border-gray-700/50 transition-all hover:scale-[1.02] cursor-pointer"
+          >
+            <div className="p-2.5 rounded-xl bg-gradient-to-br from-success to-success/70 shadow-lg">
+              <Trophy size={20} className="text-white" />
+            </div>
+
+            <div className="flex-1 text-left">
+              <h3 className="text-base font-bold uppercase tracking-wider text-foreground">Completed</h3>
+              <p className="text-xs text-muted-foreground mt-0.5">{completedNotes.length} {completedNotes.length === 1 ? 'note' : 'notes'}</p>
+            </div>
+
+            <motion.div animate={{ rotate: collapsedSections.has('completed') ? 0 : 180 }} transition={{ duration: 0.3 }}>
+              <ChevronDown size={18} className="text-muted-foreground" />
+            </motion.div>
+
+            <div className="px-3 py-1.5 rounded-xl text-sm font-bold bg-success/10 text-success border border-success/20">
+              {completedNotes.length}
+            </div>
+          </motion.button>
+
+          <AnimatePresence>
+            {!collapsedSections.has('completed') && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.25 }}
+                className="space-y-2 overflow-hidden"
+              >
+                {completedNotes.map((item, index) => (
+                  <motion.div
+                    key={item.id}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: 20 }}
+                    transition={{ delay: index * 0.03 }}
+                  >
+                    <ItemCard
+                      item={item}
+                      onToggleComplete={onToggleComplete}
+                      onView={onEdit}
+                      onEdit={onEdit}
+                      onDelete={onDelete}
+                      viewDensity={viewDensity}
+                    />
+                  </motion.div>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
+      )}
     </div>
   );
 }
