@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { ItemWithDetails, ItemType, Priority, ItemStatus, Subtask } from "@/types";
+import { ItemWithDetails, ItemType, Priority, Subtask } from "@/types";
 import { 
-  X, Save, Tag, AlertCircle, Calendar, Clock, 
-  MapPin, Plus, Trash2, Check, Globe, Lock, Sparkles 
+  X, Save, Tag, Calendar, Clock, 
+  MapPin, Plus, Trash2, Check, Globe, Lock
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AlarmPicker, AlarmConfig } from "./AlarmPicker";
@@ -344,7 +344,7 @@ export function EditFormNew({ item, categories, onSave, onCancel }: EditFormProp
             >
               2
             </motion.div>
-            <h3 className="text-xl font-bold gradient-text">What's it about?</h3>
+            <h3 className="text-xl font-bold gradient-text">What&apos;s it about?</h3>
           </div>
           
           <div className="glass rounded-2xl border-2 border-white/30 dark:border-gray-700/50 p-5 shadow-lg space-y-5">

@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { parseEventWithAlerts, formatParsedEvent } from '@/lib/eventParser';
-import { addMultipleAlerts, addPresetAlerts, ALERT_PRESETS } from '@/lib/alertManager';
+import { addMultipleAlerts, addPresetAlerts } from '@/lib/alertManager';
 import { supabase } from '@/lib/supabase';
 
 /**
@@ -24,7 +24,7 @@ export default function QuickAddWithAlerts() {
       try {
         const parsed = parseEventWithAlerts(value);
         setPreview(formatParsedEvent(parsed));
-      } catch (error) {
+      } catch {
         setPreview('');
       }
     } else {
@@ -160,7 +160,7 @@ export default function QuickAddWithAlerts() {
             disabled={loading}
           />
           <p className="mt-1 text-xs text-gray-500">
-            Try: "Event [when] at [time] [description], remind me [when] before"
+            Try: &quot;Event [when] at [time] [description], remind me [when] before&quot;
           </p>
         </div>
 

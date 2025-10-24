@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Bell, Plus, Trash2, Clock, Calendar } from 'lucide-react';
+import { Bell, Trash2, Clock, Calendar } from 'lucide-react';
 
 export interface AlarmConfig {
   id: string;
@@ -270,7 +270,7 @@ export function AlarmPicker({ eventStartTime, existingAlarms = [], onChange }: A
 
                 <select
                   value={alarm.channel}
-                  onChange={(e) => updateAlarmChannel(alarm.id, e.target.value as any)}
+                  onChange={(e) => updateAlarmChannel(alarm.id, e.target.value as 'push' | 'email' | 'sms')}
                   className="px-2 py-1 text-xs border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   <option value="push">Push</option>

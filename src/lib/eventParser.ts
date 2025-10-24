@@ -4,7 +4,6 @@
  */
 
 import { smartParse, type SmartParsedData } from './smartParser';
-import { type ItemType, type Priority } from '@/types';
 
 export interface ParsedEventWithAlerts {
   // Original parsed data from smartParser

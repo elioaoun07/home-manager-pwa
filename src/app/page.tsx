@@ -13,7 +13,7 @@ import { FAB } from "@/components/FAB";
 import { EditFormNew } from "@/components/EditFormNew";
 import { ViewDetails } from "@/components/ViewDetails";
 import { SettingsSidebar, ViewDensity } from "@/components/SettingsSidebar";
-import { Drawer, DrawerContent, DrawerTitle, DrawerDescription } from "@/components/ui/drawer";
+import { Drawer } from "@/components/ui/drawer";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { 

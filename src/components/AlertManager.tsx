@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   addMultipleAlerts,
   getItemAlerts,
@@ -29,11 +29,7 @@ export default function AlertManager({ itemId, eventStart, onAlertsChange }: Ale
     { offset_minutes: 30, channel: 'push' }
   ]);
 
-  useEffect(() => {
-    loadAlerts();
-  }, [itemId]);
-
-  const loadAlerts = async () => {
+  const loadAlerts = useCallback(async () => {
     try {
       setLoading(true);
       const data = await getItemAlerts(itemId);
@@ -43,7 +39,11 @@ export default function AlertManager({ itemId, eventStart, onAlertsChange }: Ale
     } finally {
       setLoading(false);
     }
-  };
+  }, [itemId]);
+
+  useEffect(() => {
+    loadAlerts();
+  }, [loadAlerts]);
 
   const handleApplyPreset = async () => {
     try {
@@ -93,7 +93,7 @@ export default function AlertManager({ itemId, eventStart, onAlertsChange }: Ale
     setCustomAlerts([...customAlerts, { offset_minutes: 60, channel: 'push' }]);
   };
 
-  const updateCustomAlert = (index: number, field: keyof AlertPreset, value: any) => {
+  const updateCustomAlert = (index: number, field: keyof AlertPreset, value: number | AlertChannel) => {
     const updated = [...customAlerts];
     updated[index] = { ...updated[index], [field]: value };
     setCustomAlerts(updated);
