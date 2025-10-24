@@ -583,39 +583,7 @@ export function EditFormNew({ item, categories, onSave, onCancel }: EditFormProp
                   </div>
                 </div>
 
-                {/* Duration Indicator */}
-                {startDate && endDate && startTime && endTime && (() => {
-                  const start = new Date(`${startDate}T${startTime}`);
-                  const end = new Date(`${endDate}T${endTime}`);
-                  const diffMs = end.getTime() - start.getTime();
-                  
-                  // Only show if end is after start
-                  if (diffMs > 0) {
-                    const diffMins = Math.floor(diffMs / 60000);
-                    const diffHours = Math.floor(diffMins / 60);
-                    const diffDays = Math.floor(diffHours / 24);
-                    
-                    let durationText = '';
-                    if (diffDays > 0) durationText = `${diffDays}d ${diffHours % 24}h`;
-                    else if (diffHours > 0) durationText = `${diffHours}h ${diffMins % 60}m`;
-                    else durationText = `${diffMins}m`;
-
-                    return (
-                      <div className="flex items-center justify-center gap-2 py-1">
-                        <div className="h-px flex-1 bg-gradient-to-r from-transparent via-emerald-300/50 to-transparent"></div>
-                        <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-100/50 dark:bg-emerald-900/30 border border-emerald-300/30 dark:border-emerald-700/30">
-                          <Clock className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
-                          <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-300">
-                            {durationText}
-                          </span>
-                        </div>
-                        <div className="h-px flex-1 bg-gradient-to-r from-transparent via-emerald-300/50 to-transparent"></div>
-                      </div>
-                    );
-                  }
-                  return null;
-                })()}
-
+ 
                 {/* End - Date and Time side by side */}
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
