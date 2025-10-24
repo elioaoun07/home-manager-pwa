@@ -1,7 +1,14 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { ItemWithDetails, ViewType, ParsedInput, ItemStatus } from "@/types";
+import {
+  ItemWithDetails,
+  ViewType,
+  ParsedInput,
+  ItemStatus,
+  EventDetails,
+  ReminderDetails,
+} from "@/types";
 import { AuthWrapper } from "@/components/AuthWrapper";
 import { QuickAdd } from "@/components/QuickAdd";
 import { TodayView } from "@/components/TodayView";
@@ -254,7 +261,7 @@ function HomeContent() {
         // Handle event details
         if (data.type === "event" && data.event_details) {
           await upsertEventDetails({
-            ...(data.event_details as any),
+              ...(data.event_details as EventDetails),
             item_id: editingItem.id,
           });
 
@@ -267,7 +274,7 @@ function HomeContent() {
         // Handle reminder details
         if (data.type === "reminder" && data.reminder_details) {
           await upsertReminderDetails({
-            ...(data.reminder_details as any),
+            ...(data.reminder_details as ReminderDetails),
             item_id: editingItem.id,
             has_checklist: (data.subtasks?.length ?? 0) > 0,
           });
@@ -286,7 +293,7 @@ function HomeContent() {
         // Handle event details
         if (data.type === "event" && data.event_details) {
           await upsertEventDetails({
-            ...(data.event_details as any),
+            ...(data.event_details as EventDetails),
             item_id: newItem.id,
           });
 
@@ -299,7 +306,7 @@ function HomeContent() {
         // Handle reminder details
         if (data.type === "reminder" && data.reminder_details) {
           await upsertReminderDetails({
-            ...(data.reminder_details as any),
+            ...(data.reminder_details as ReminderDetails),
             item_id: newItem.id,
             has_checklist: (data.subtasks?.length ?? 0) > 0,
           });
@@ -333,7 +340,7 @@ function HomeContent() {
         error instanceof Error
           ? error.message
           : error && typeof error === "object" && "message" in error
-          ? String((error as any).message)
+          ? String((error as Record<string, unknown>).message)
           : "Failed to save item";
       toast.error(errorMessage);
     }
@@ -379,16 +386,16 @@ function HomeContent() {
     let nCount = 0;
 
     for (const it of items) {
-      const type = (it as any).type;
-      const status = (it as any).status;
+      const type = it.type;
+      const status = it.status;
 
       // TODAY: pending events that overlap today OR reminders that are due today OR OVERDUE
       if (status !== "done") {
-        const e = (it as any).event_details;
-        const r = (it as any).reminder_details;
+        const e = it.event_details;
+        const r = it.reminder_details;
 
         const isEventToday =
-          e && (overlapsToday(e.start_at, e.end_at) || (e.all_day && inToday(e.start_at)));
+          !!e && (overlapsToday(e.start_at, e.end_at) || (e.all_day && inToday(e.start_at)));
 
         // NEW: include overdue reminders too (<= end of today covers overdue + due today)
         const isReminderDueOrOverdue =
@@ -398,8 +405,9 @@ function HomeContent() {
       }
 
       // NOTES: note items, or reminder with no due_at (note-like)
-      const r2 = (it as any).reminder_details;
-      const isNoteLike = type === "note" || (type === "reminder" && (!r2 || !r2.due_at));
+  const r2 = it.reminder_details;
+  // Notes are represented as reminders without a due date
+  const isNoteLike = type === "reminder" && (!r2 || !r2.due_at);
       if (isNoteLike) nCount++;
     }
 
