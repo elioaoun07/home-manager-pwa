@@ -947,12 +947,12 @@ export function EditFormNew({ item, categories, onSave, onCancel }: EditFormProp
           </motion.div>
         )}
 
-        {/* Action Buttons */}
+        {/* Action Buttons (sticky footer) */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="flex justify-end gap-4 pt-6 border-t-2 border-gradient"
+          className="sticky bottom-0 z-40 flex justify-end gap-4 p-4 border-t-2 border-gradient bg-background/95 backdrop-blur-lg"
         >
           <motion.button
             whileHover={{ scale: 1.05 }}
