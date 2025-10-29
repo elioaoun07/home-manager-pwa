@@ -17,7 +17,7 @@ export async function createItem(itemData: Partial<Item>): Promise<Item> {
 
   // Remove fields that don't belong to the items table
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { categories, subtasks, event_details, reminder_details, ...itemFields } = itemData as Partial<ItemWithDetails>;
+  const { categories, subtasks, event_details, reminder_details, alarms, eventStartTime, alerts, recurrence_rule, attachments, ...itemFields } = itemData as Partial<ItemWithDetails> & { alarms?: unknown; eventStartTime?: unknown };
 
   const { data, error } = await supabase
     .from('items')
@@ -178,7 +178,7 @@ export async function updateItem(id: string, updates: Partial<Item>): Promise<It
 
   // Remove fields that don't belong to the items table
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { categories, subtasks, event_details, reminder_details, recurrence_rule, ...itemFields } = updates as Partial<ItemWithDetails>;
+  const { categories, subtasks, event_details, reminder_details, recurrence_rule, alarms, eventStartTime, alerts, attachments, ...itemFields } = updates as Partial<ItemWithDetails> & { alarms?: unknown; eventStartTime?: unknown };
 
   // Only include valid Item table fields
   const validItemFields: Partial<Item> = {};
