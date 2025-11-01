@@ -262,7 +262,7 @@ export function CategoriesView({ items, onToggleComplete, onEdit, onDelete, onVi
                 <SwipeableItemCard
                   item={item}
                   onToggleComplete={onToggleComplete}
-                  onView={onView}
+                  onView={onEdit}
                   onEdit={onEdit}
                   onDelete={onDelete}
                 />

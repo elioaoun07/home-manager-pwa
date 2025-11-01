@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { ItemWithDetails, ItemType, Priority, Subtask } from "@/types";
 import { 
   X, Save, Tag, Calendar, Clock, 
-  MapPin, Plus, Trash2, Check, Globe, Lock, StickyNote
+  MapPin, Plus, Trash2, Check, Globe, Lock, StickyNote, Bell
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AlarmPicker, AlarmConfig } from "./AlarmPicker";
@@ -728,7 +728,10 @@ export function EditFormNew({ item, categories, onSave, onCancel }: EditFormProp
               </div>
 
               <div>
-                <label className="block text-base font-semibold mb-3 text-foreground">Reminders</label>
+                <label className="flex items-center gap-2 text-base font-semibold mb-3 text-foreground">
+                  <Bell className="w-4 h-4" />
+                  Alarms & Reminders
+                </label>
                 <AlarmPicker
                   eventStartTime={startDate && startTime ? new Date(`${startDate}T${startTime}`) : null}
                   existingAlarms={alarms}

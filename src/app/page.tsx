@@ -733,7 +733,7 @@ function HomeContent() {
                 <TodayView
                   items={items}
                   onToggleComplete={handleToggleComplete}
-                  onEdit={handleView}
+                  onEdit={handleEdit}
                   onDelete={handleDelete}
                   onArchive={handleArchive}
                   onUnarchive={handleUnarchive}
@@ -746,7 +746,7 @@ function HomeContent() {
                   items={items}
                   onToggleComplete={handleToggleComplete}
                   onView={handleView}
-                  onEdit={handleView}
+                  onEdit={handleEdit}
                   onDelete={handleDelete}
                   onArchive={handleArchive}
                   onUnarchive={handleUnarchive}
@@ -759,7 +759,7 @@ function HomeContent() {
                 <CalendarViewNew
                   items={items}
                   onToggleComplete={handleToggleComplete}
-                  onEdit={handleView}
+                  onEdit={handleEdit}
                   onDelete={handleDelete}
                   onArchive={handleArchive}
                   onUnarchive={handleUnarchive}

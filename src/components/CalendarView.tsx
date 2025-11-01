@@ -252,7 +252,7 @@ export function CalendarView({ items, onToggleComplete, onEdit, onDelete, onView
                       <SwipeableItemCard
                         item={item}
                         onToggleComplete={onToggleComplete}
-                        onView={onView}
+                        onView={onEdit}
                         onEdit={onEdit}
                         onDelete={onDelete}
                       />
