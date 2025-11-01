@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { ItemWithDetails } from "@/types";
 import { getMonthData, isSameDay, getItemDate } from "@/lib/utils";
-import { ItemCard } from "./ItemCard";
+import { SwipeableItemCard } from "./SwipeableItemCard";
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronLeft, ChevronRight, Calendar, Sparkles } from "lucide-react";
 
@@ -249,7 +249,7 @@ export function CalendarView({ items, onToggleComplete, onEdit, onDelete, onView
                         damping: 25
                       }}
                     >
-                      <ItemCard
+                      <SwipeableItemCard
                         item={item}
                         onToggleComplete={onToggleComplete}
                         onView={onView}

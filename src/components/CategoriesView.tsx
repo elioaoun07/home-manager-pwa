@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { ItemWithDetails, Priority } from "@/types";
-import { ItemCard } from "./ItemCard";
+import { SwipeableItemCard } from "./SwipeableItemCard";
 import { AnimatePresence, motion } from "framer-motion";
 import { Filter, Tag, AlertCircle, X } from "lucide-react";
 
@@ -259,7 +259,7 @@ export function CategoriesView({ items, onToggleComplete, onEdit, onDelete, onVi
                   damping: 25
                 }}
               >
-                <ItemCard
+                <SwipeableItemCard
                   item={item}
                   onToggleComplete={onToggleComplete}
                   onView={onView}

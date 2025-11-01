@@ -1,7 +1,7 @@
 "use client";
 
 import { ItemWithDetails } from "@/types";
-import { ItemCard } from "./ItemCard";
+import { SwipeableItemCard } from "@/components/SwipeableItemCard";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
 import { StickyNote, Trophy, ChevronDown, Archive } from "lucide-react";
@@ -101,7 +101,7 @@ export function NotesView({ items, onToggleComplete, onEdit, onDelete, viewDensi
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.05 }}
             >
-              <ItemCard
+              <SwipeableItemCard
                 item={item}
                 onToggleComplete={onToggleComplete}
                 onView={onEdit}
@@ -156,7 +156,7 @@ export function NotesView({ items, onToggleComplete, onEdit, onDelete, viewDensi
                     exit={{ opacity: 0, x: 20 }}
                     transition={{ delay: index * 0.03 }}
                   >
-                    <ItemCard
+                    <SwipeableItemCard
                       item={item}
                       onToggleComplete={onToggleComplete}
                       onView={onEdit}
@@ -214,7 +214,7 @@ export function NotesView({ items, onToggleComplete, onEdit, onDelete, viewDensi
                     exit={{ opacity: 0, x: 20 }}
                     transition={{ delay: index * 0.03 }}
                   >
-                    <ItemCard
+                    <SwipeableItemCard
                       item={item}
                       onToggleComplete={onToggleComplete}
                       onView={onEdit}

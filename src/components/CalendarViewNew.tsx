@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { ItemWithDetails, Priority } from "@/types";
-import { ItemCard } from "./ItemCard";
+import { SwipeableItemCard } from "./SwipeableItemCard";
 import { motion, AnimatePresence } from "framer-motion";
 import { Calendar, ChevronLeft, ChevronRight, Filter, LayoutGrid, Rows3, CalendarDays, X } from "lucide-react";
 import { useHolidays } from "@/hooks/useHolidays";
@@ -609,7 +609,7 @@ export function CalendarViewNew({ items, onToggleComplete, onEdit, onDelete, cat
                           
                           return (
                             <div key={item.id}>
-                              <ItemCard
+                              <SwipeableItemCard
                                 item={item}
                                 onToggleComplete={onToggleComplete}
                                 onView={onEdit}

@@ -1,7 +1,7 @@
 "use client";
 
 import { ItemWithDetails } from "@/types";
-import { ItemCard } from "./ItemCard";
+import { SwipeableItemCard } from "./SwipeableItemCard";
 import { getItemDate } from "@/lib/utils";
 import { AnimatePresence, motion } from "framer-motion";
 import { CalendarDays, Sparkles } from "lucide-react";
@@ -182,7 +182,7 @@ export function UpcomingView({ items, days, onToggleComplete, onEdit, onDelete, 
                       damping: 25
                     }}
                   >
-                    <ItemCard
+                    <SwipeableItemCard
                       item={item}
                       onToggleComplete={onToggleComplete}
                       onView={onEdit}

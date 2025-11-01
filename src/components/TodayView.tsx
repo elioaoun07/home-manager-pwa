@@ -1,7 +1,7 @@
 "use client";
 
 import { ItemWithDetails } from "@/types";
-import { ItemCard } from "./ItemCard";
+import { SwipeableItemCard } from "./SwipeableItemCard";
 import { isOverdue, isSameDay, getTimeOfDay, getItemDate } from "@/lib/utils";
 import { Sun, Sunset, Moon, AlertTriangle, Sparkles, Trophy, ChevronDown } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
@@ -163,7 +163,7 @@ export function TodayView({ items, onToggleComplete, onEdit, onDelete, viewDensi
                   damping: 25
                 }}
               >
-                <ItemCard
+                <SwipeableItemCard
                   item={item}
                   onToggleComplete={onToggleComplete}
                   onView={onEdit}
