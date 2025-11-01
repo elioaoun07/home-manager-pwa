@@ -10,7 +10,7 @@ export interface AlarmConfig {
   offset_minutes?: number;
   // For absolute alarms
   absolute_time?: string; // ISO string
-  channel: 'push' | 'email' | 'sms';
+  channel: 'push' | 'email';
 }
 
 interface AlarmPickerProps {
@@ -99,7 +99,7 @@ export function AlarmPicker({ eventStartTime, existingAlarms = [], onChange }: A
     setAlarms(alarms.filter(a => a.id !== id));
   };
 
-  const updateAlarmChannel = (id: string, channel: 'push' | 'email' | 'sms') => {
+  const updateAlarmChannel = (id: string, channel: 'push' | 'email') => {
     setAlarms(alarms.map(a => a.id === id ? { ...a, channel } : a));
   };
 
@@ -186,12 +186,11 @@ export function AlarmPicker({ eventStartTime, existingAlarms = [], onChange }: A
                   <ChannelIcon className="w-3 h-3 text-gray-600 dark:text-gray-400" />
                   <select
                     value={alarm.channel}
-                    onChange={(e) => updateAlarmChannel(alarm.id, e.target.value as 'push' | 'email' | 'sms')}
+                    onChange={(e) => updateAlarmChannel(alarm.id, e.target.value as 'push' | 'email')}
                     className="text-xs bg-transparent border-none focus:ring-0 focus:outline-none text-gray-700 dark:text-gray-300 cursor-pointer pr-1"
                   >
                     <option value="push">Push</option>
                     <option value="email">Email</option>
-                    <option value="sms">SMS</option>
                   </select>
                 </div>
 

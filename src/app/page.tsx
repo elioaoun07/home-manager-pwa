@@ -441,7 +441,7 @@ function HomeContent() {
         type: "relative" | "absolute";
         offset_minutes?: number;
         absolute_time?: string;
-        channel: "push" | "email" | "sms";
+        channel: "push" | "email";
       }>;
       eventStartTime?: Date;
     }

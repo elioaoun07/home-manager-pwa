@@ -20,7 +20,7 @@ export interface ParsedEventWithAlerts {
     preset?: 'standard' | 'important' | 'minimal' | 'daily' | 'weekly' | 'custom';
     custom?: Array<{
       offset_minutes: number;
-      channel: 'push' | 'email' | 'sms';
+      channel: 'push' | 'email';
       label?: string;
     }>;
   };

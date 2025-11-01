@@ -74,7 +74,7 @@ export function EditFormNew({ item, categories, onSave, onCancel }: EditFormProp
           type: alert.kind === 'absolute' ? 'absolute' : 'relative',
           offset_minutes: alert.kind === 'relative' ? alert.offset_minutes : undefined,
           absolute_time: alert.kind === 'absolute' ? alert.trigger_at : undefined,
-          channel: alert.channel as 'push' | 'email' | 'sms',
+          channel: alert.channel as 'push' | 'email',
         }));
         setAlarms(loadedAlarms);
       } else {

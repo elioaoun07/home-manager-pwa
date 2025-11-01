@@ -11,7 +11,7 @@ import { supabase } from '@/lib/supabase';
 
 export type AlertKind = 'absolute' | 'relative' | 'recurring';
 export type AlertRelativeTo = 'event_start' | 'event_end' | 'due_date' | 'created_at';
-export type AlertChannel = 'push' | 'email' | 'sms' | 'in_app';
+export type AlertChannel = 'push' | 'email' | 'in_app';
 
 export interface Alert {
   id: string;

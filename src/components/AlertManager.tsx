@@ -176,7 +176,6 @@ export default function AlertManager({ itemId, eventStart, onAlertsChange }: Ale
               >
                 <option value="push">Push</option>
                 <option value="email">Email</option>
-                <option value="sms">SMS</option>
                 <option value="in_app">In-App</option>
               </select>
 
