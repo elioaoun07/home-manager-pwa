@@ -357,77 +357,11 @@ export function SwipeableItemCard({
     );
   }
 
-  // Comfy view
+  // Comfy view - No swipe, buttons always visible
   return (
-    <div className="overflow-hidden rounded-xl mb-3">
-      <div className="relative">
-        {/* Full background color layer - at the very back */}
-        <div className={`absolute inset-0 bg-gradient-to-r ${swipeGradient}`} />
-        
-        {/* Right side - Edit/Delete icons (shown when swiping LEFT) */}
-        <div className="absolute inset-y-0 right-0 flex items-center gap-6 px-6 z-10">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setSwipeState('closed');
-              setDragDirection(null);
-              onEdit(item);
-            }}
-            className="flex items-center gap-2 text-white hover:scale-110 transition-transform active:scale-95"
-          >
-            <Edit size={24} strokeWidth={2.5} />
-            <span className="font-bold text-lg">Edit</span>
-          </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              if (window.confirm('Delete this item?')) {
-                setSwipeState('closed');
-                setDragDirection(null);
-                onDelete(item.id);
-              }
-            }}
-            className="flex items-center gap-2 text-white hover:scale-110 transition-transform active:scale-95"
-          >
-            <Trash2 size={24} strokeWidth={2.5} />
-            <span className="font-bold text-lg">Delete</span>
-          </button>
-        </div>
-
-        {/* Left side - Archive icon (shown when swiping RIGHT) */}
-        <div className="absolute inset-y-0 left-0 flex items-center gap-6 px-6 z-10">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setSwipeState('closed');
-              setDragDirection(null);
-              if (isArchived && onUnarchive) {
-                onUnarchive(item.id);
-              } else if (!isArchived && onArchive) {
-                onArchive(item.id);
-              }
-            }}
-            className="flex items-center gap-2 text-white hover:scale-110 transition-transform active:scale-95"
-          >
-            <span className="font-bold text-lg">{isArchived ? 'Restore' : 'Archive'}</span>
-            {isArchived ? <RotateCcw size={24} strokeWidth={2.5} /> : <Archive size={24} strokeWidth={2.5} />}
-          </button>
-        </div>
-
-      {/* Main card - draggable, sits on top */}
-      <motion.div
-        drag="x"
-        dragConstraints={{ left: -100, right: 100 }}
-        dragElastic={0.2}
-        onDragStart={handleDragStart}
-        onDrag={handleDrag}
-        onDragEnd={handleDragEnd}
-        onClick={handleClick}
-        animate={{
-          x: swipeState === 'left' ? SWIPE_OPEN_AMOUNT : swipeState === 'right' ? SWIPE_RIGHT_OPEN_AMOUNT : 0
-        }}
-        transition={{ type: "spring", stiffness: 400, damping: 30 }}
-        className={`relative p-4 rounded-xl border bg-card shadow-sm cursor-pointer touch-pan-y z-20 ${
+    <div className="mb-3">
+      <div
+        className={`relative p-4 rounded-xl border bg-card shadow-sm ${
           isOverdue && !isCompleted ? 'border-rose-400 bg-rose-50/50 dark:bg-rose-950/20' : ''
         }`}
         style={{
@@ -438,7 +372,8 @@ export function SwipeableItemCard({
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-start gap-3 flex-1 min-w-0">
             <div 
-              className="flex-shrink-0 p-2 rounded-lg"
+              className="flex-shrink-0 p-2 rounded-lg cursor-pointer"
+              onClick={() => onView(item)}
               style={{ 
                 backgroundColor: `${categoryColor}20`,
               }}
@@ -446,7 +381,7 @@ export function SwipeableItemCard({
               <Icon size={20} style={{ color: categoryColor }} />
             </div>
             
-            <div className="flex-1 min-w-0">
+            <div className="flex-1 min-w-0 cursor-pointer" onClick={() => onView(item)}>
               <div className="flex items-center gap-2 mb-1">
                 <h3 className={isCompleted ? "line-through text-muted-foreground font-semibold" : "font-semibold text-foreground"}>
                   {item.title}
@@ -533,10 +468,35 @@ export function SwipeableItemCard({
                   </button>
                 </div>
                 
-                {/* Swipe hint */}
-                <span className="text-xs text-muted-foreground/60 italic">
-                  ← Delete · Archive →
-                </span>
+                {/* Action buttons - always visible */}
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (isArchived && onUnarchive) {
+                        onUnarchive(item.id);
+                      } else if (!isArchived && onArchive) {
+                        onArchive(item.id);
+                      }
+                    }}
+                    className="p-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-600 transition-colors"
+                    title={isArchived ? "Restore" : "Archive"}
+                  >
+                    {isArchived ? <RotateCcw size={16} /> : <Archive size={16} />}
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (window.confirm('Delete this item?')) {
+                        onDelete(item.id);
+                      }
+                    }}
+                    className="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 transition-colors"
+                    title="Delete"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -568,7 +528,6 @@ export function SwipeableItemCard({
             </button>
           </div>
         </div>
-      </motion.div>
       </div>
     </div>
   );

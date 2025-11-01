@@ -29,8 +29,7 @@ export function BottomNav({
     label: string;
     icon: React.ElementType;
   }[] = [
-    { view: "today", label: "Today", icon: Sparkles },
-    { view: "upcoming", label: "Upcoming", icon: ListTodo },
+    { view: "today", label: "Tasks", icon: Sparkles },
     { view: "notes", label: "Notes", icon: StickyNote },
     { view: "calendar", label: "Calendar", icon: Calendar },
   ];

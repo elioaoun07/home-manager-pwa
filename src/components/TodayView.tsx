@@ -3,9 +3,11 @@
 import { ItemWithDetails } from "@/types";
 import { SwipeableItemCard } from "./SwipeableItemCard";
 import { isOverdue, isSameDay, getTimeOfDay, getItemDate } from "@/lib/utils";
-import { Sun, Sunset, Moon, AlertTriangle, Sparkles, Trophy, ChevronDown } from "lucide-react";
+import { Sun, Sunset, Moon, AlertTriangle, Sparkles, Trophy, ChevronDown, Calendar } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useState } from "react";
+
+type TimeRange = "today" | "week" | "month";
 
 interface TodayViewProps {
   items: ItemWithDetails[];
@@ -19,6 +21,9 @@ interface TodayViewProps {
 
 export function TodayView({ items, onToggleComplete, onEdit, onDelete, onArchive, onUnarchive, viewDensity = "comfy" }: TodayViewProps) {
   const today = new Date();
+  
+  // State for time range filter
+  const [timeRange, setTimeRange] = useState<TimeRange>("today");
   
   // State for collapsible sections (collapsed by default: overdue, completed)
   const [collapsedSections, setCollapsedSections] = useState<Set<string>>(new Set(["overdue", "completed"]));
@@ -34,13 +39,50 @@ export function TodayView({ items, onToggleComplete, onEdit, onDelete, onArchive
       return newSet;
     });
   };
+
+  // Filter items based on time range
+  const getItemsInRange = () => {
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+
+    // Filter out notes - only show events and reminders
+    const eventsAndReminders = items.filter(item => item.type === 'event' || item.type === 'reminder');
+
+    if (timeRange === "today") {
+      return eventsAndReminders.filter((item) => {
+        const itemDate = getItemDate(item);
+        return itemDate && isSameDay(itemDate, today);
+      });
+    } else if (timeRange === "week") {
+      const weekEnd = new Date(now);
+      weekEnd.setDate(weekEnd.getDate() + 7);
+      return eventsAndReminders.filter((item) => {
+        const itemDate = getItemDate(item);
+        if (!itemDate) return false;
+        return itemDate >= now && itemDate < weekEnd;
+      });
+    } else { // month
+      const monthEnd = new Date(now);
+      monthEnd.setMonth(monthEnd.getMonth() + 1);
+      return eventsAndReminders.filter((item) => {
+        const itemDate = getItemDate(item);
+        if (!itemDate) return false;
+        return itemDate >= now && itemDate < monthEnd;
+      });
+    }
+  };
   
+  const rangeItems = getItemsInRange();
   const todayItems = items.filter((item) => {
     const itemDate = getItemDate(item);
-    return itemDate && isSameDay(itemDate, today);
+    // Only events and reminders
+    return (item.type === 'event' || item.type === 'reminder') && itemDate && isSameDay(itemDate, today);
   });
 
-  const overdueItems = items.filter((item) => isOverdue(item));
+  const overdueItems = items.filter((item) => {
+    // Only events and reminders
+    return (item.type === 'event' || item.type === 'reminder') && isOverdue(item);
+  });
 
   const morningItems = todayItems.filter((item) => {
     const date = getItemDate(item);
@@ -57,8 +99,40 @@ export function TodayView({ items, onToggleComplete, onEdit, onDelete, onArchive
     return date && getTimeOfDay(date) === "evening" && item.status !== 'done';
   });
 
-  // Completed items for Today (show in collapsed container by default)
-  const completedItems = todayItems.filter(i => i.status === 'done');
+  // Completed Events & Reminders based on time range
+  const getCompletedInRange = () => {
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+
+    const completedEventsReminders = items.filter(item => 
+      (item.type === 'event' || item.type === 'reminder') && item.status === 'done'
+    );
+
+    if (timeRange === "today") {
+      // Show items completed today
+      return completedEventsReminders.filter(item => 
+        item.updated_at && isSameDay(new Date(item.updated_at), today)
+      );
+    } else if (timeRange === "week") {
+      const weekEnd = new Date(now);
+      weekEnd.setDate(weekEnd.getDate() + 7);
+      return completedEventsReminders.filter(item => {
+        if (!item.updated_at) return false;
+        const completedDate = new Date(item.updated_at);
+        return completedDate >= now && completedDate < weekEnd;
+      });
+    } else { // month
+      const monthEnd = new Date(now);
+      monthEnd.setMonth(monthEnd.getMonth() + 1);
+      return completedEventsReminders.filter(item => {
+        if (!item.updated_at) return false;
+        const completedDate = new Date(item.updated_at);
+        return completedDate >= now && completedDate < monthEnd;
+      });
+    }
+  };
+
+  const completedItems = getCompletedInRange();
 
   const completedToday = todayItems.filter(i => i.status === 'done').length;
   const totalToday = todayItems.length;
@@ -185,12 +259,59 @@ export function TodayView({ items, onToggleComplete, onEdit, onDelete, onArchive
     );
   };
 
-  const hasAnyItems = overdueItems.length > 0 || todayItems.length > 0;
+  const hasAnyItems = overdueItems.length > 0 || rangeItems.length > 0;
 
   return (
     <div className="pb-24">
+      {/* Time Range Filter */}
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="mb-4 flex gap-2 p-1 bg-muted/50 rounded-xl border border-border"
+      >
+        <button
+          onClick={() => setTimeRange("today")}
+          className={`
+            flex-1 px-3 py-2 rounded-lg text-xs font-semibold transition-all
+            ${timeRange === "today" 
+              ? 'bg-primary text-white shadow-md' 
+              : 'text-muted-foreground hover:text-foreground hover:bg-muted/80'
+            }
+          `}
+        >
+          <Sparkles size={14} className="inline mr-1" />
+          Today
+        </button>
+        <button
+          onClick={() => setTimeRange("week")}
+          className={`
+            flex-1 px-3 py-2 rounded-lg text-xs font-semibold transition-all
+            ${timeRange === "week" 
+              ? 'bg-primary text-white shadow-md' 
+              : 'text-muted-foreground hover:text-foreground hover:bg-muted/80'
+            }
+          `}
+        >
+          <Calendar size={14} className="inline mr-1" />
+          This Week
+        </button>
+        <button
+          onClick={() => setTimeRange("month")}
+          className={`
+            flex-1 px-3 py-2 rounded-lg text-xs font-semibold transition-all
+            ${timeRange === "month" 
+              ? 'bg-primary text-white shadow-md' 
+              : 'text-muted-foreground hover:text-foreground hover:bg-muted/80'
+            }
+          `}
+        >
+          <Calendar size={14} className="inline mr-1" />
+          This Month
+        </button>
+      </motion.div>
+
       {/* Progress Card */}
-      {totalToday > 0 && (
+      {totalToday > 0 && timeRange === "today" && (
         <motion.div
           initial={{ opacity: 0, y: -20, scale: 0.9 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -292,32 +413,86 @@ export function TodayView({ items, onToggleComplete, onEdit, onDelete, onArchive
         true
       )}
       
-      {renderSection(
-        "Morning", 
-        morningItems, 
-        <Sun size={20} className="text-white" />,
-        "from-warning to-warning/70"
-      )}
-      
-      {renderSection(
-        "Afternoon", 
-        afternoonItems, 
-        <Sunset size={20} className="text-white" />,
-        "from-info to-info/70"
-      )}
-      
-      {renderSection(
-        "Evening", 
-        eveningItems, 
-        <Moon size={20} className="text-white" />,
-        "from-primary to-primary/70"
-      )}
+      {timeRange === "today" ? (
+        <>
+          {renderSection(
+            "Morning", 
+            morningItems, 
+            <Sun size={20} className="text-white" />,
+            "from-warning to-warning/70"
+          )}
+          
+          {renderSection(
+            "Afternoon", 
+            afternoonItems, 
+            <Sunset size={20} className="text-white" />,
+            "from-info to-info/70"
+          )}
+          
+          {renderSection(
+            "Evening", 
+            eveningItems, 
+            <Moon size={20} className="text-white" />,
+            "from-primary to-primary/70"
+          )}
 
-      {renderSection(
-        "Completed",
-        completedItems,
-        <Trophy size={20} className="text-white" />,
-        "from-success to-success/70"
+          {/* Completed section - shows in all time ranges */}
+          {renderSection(
+            timeRange === "today" ? "Completed Today" : timeRange === "week" ? "Completed This Week" : "Completed This Month",
+            completedItems,
+            <Trophy size={20} className="text-white" />,
+            "from-success to-success/70"
+          )}
+        </>
+      ) : (
+        /* Week/Month view - Group by date */
+        <>
+          {(() => {
+            // Group items by date (excluding completed)
+            const itemsByDate = new Map<string, ItemWithDetails[]>();
+            rangeItems.filter(item => item.status !== 'done').forEach(item => {
+              const itemDate = getItemDate(item);
+              if (!itemDate) return;
+              
+              const dateKey = itemDate.toDateString();
+              if (!itemsByDate.has(dateKey)) {
+                itemsByDate.set(dateKey, []);
+              }
+              itemsByDate.get(dateKey)!.push(item);
+            });
+
+            // Sort dates
+            const sortedDates = Array.from(itemsByDate.keys()).sort((a, b) => 
+              new Date(a).getTime() - new Date(b).getTime()
+            );
+
+            return sortedDates.map(dateKey => {
+              const dateItems = itemsByDate.get(dateKey)!;
+              const date = new Date(dateKey);
+              const isToday = isSameDay(date, today);
+              const dayName = date.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+              
+              return (
+                <div key={dateKey}>
+                  {renderSection(
+                    isToday ? `${dayName} (Today)` : dayName,
+                    dateItems,
+                    <Calendar size={20} className="text-white" />,
+                    isToday ? "from-primary to-primary/70" : "from-slate-500 to-slate-700"
+                  )}
+                </div>
+              );
+            });
+          })()}
+          
+          {/* Completed section for week/month view */}
+          {renderSection(
+            timeRange === "week" ? "Completed This Week" : "Completed This Month",
+            completedItems,
+            <Trophy size={20} className="text-white" />,
+            "from-success to-success/70"
+          )}
+        </>
       )}
     </div>
   );

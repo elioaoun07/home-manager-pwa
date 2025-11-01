@@ -741,20 +741,6 @@ function HomeContent() {
                 />
               )}
 
-              {currentView === "upcoming" && (
-                <UpcomingView
-                  items={items}
-                  days={30}
-                  onToggleComplete={handleToggleComplete}
-                  onView={handleView}
-                  onEdit={handleView}
-                  onDelete={handleDelete}
-                  onArchive={handleArchive}
-                  onUnarchive={handleUnarchive}
-                  viewDensity={viewDensity}
-                />
-              )}
-
               {currentView === "notes" && (
                 <NotesView
                   items={items}

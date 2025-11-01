@@ -234,35 +234,62 @@ export async function unarchiveItem(id: string): Promise<Item> {
   return updateItem(id, { archived_at: undefined });
 }
 
-// Auto-archive completed items older than 1 week
+// Auto-archive completed items based on type-specific rules
 export async function autoArchiveOldCompletedItems(): Promise<number> {
   const user = await getCurrentUser();
   if (!user) throw new Error('User not authenticated');
 
-  const oneWeekAgo = new Date();
+  const now = new Date();
+  const oneWeekAgo = new Date(now);
   oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+  
+  const yesterday = new Date(now);
+  yesterday.setDate(yesterday.getDate() - 1);
+  yesterday.setHours(23, 59, 59, 999); // End of yesterday
 
-  // Find completed items older than 1 week that aren't already archived
-  const { data: itemsToArchive, error: fetchError } = await supabase
+  // Rule 1: Archive notes completed more than 1 week ago
+  const { data: notesToArchive, error: notesError } = await supabase
     .from('items')
-    .select('id, updated_at')
+    .select('id')
     .eq('user_id', user.id)
+    .eq('type', 'note')
     .eq('status', 'done')
     .is('archived_at', null)
     .lt('updated_at', oneWeekAgo.toISOString());
 
-  if (fetchError) throw fetchError;
-  if (!itemsToArchive || itemsToArchive.length === 0) return 0;
+  if (notesError) throw notesError;
+
+  // Rule 2: Archive events and reminders completed before today (completed yesterday or earlier)
+  const { data: eventsRemindersToArchive, error: eventsError } = await supabase
+    .from('items')
+    .select('id')
+    .eq('user_id', user.id)
+    .in('type', ['event', 'reminder'])
+    .eq('status', 'done')
+    .is('archived_at', null)
+    .lt('updated_at', yesterday.toISOString());
+
+  if (eventsError) throw eventsError;
+
+  // Combine all items to archive
+  const allItemsToArchive = [
+    ...(notesToArchive || []),
+    ...(eventsRemindersToArchive || [])
+  ];
+
+  if (allItemsToArchive.length === 0) return 0;
+
+  const itemIds = allItemsToArchive.map(item => item.id);
 
   // Archive them
   const { error: updateError } = await supabase
     .from('items')
     .update({ archived_at: new Date().toISOString() })
-    .in('id', itemsToArchive.map(item => item.id));
+    .in('id', itemIds);
 
   if (updateError) throw updateError;
   
-  return itemsToArchive.length;
+  return allItemsToArchive.length;
 }
 
 // Event Details
