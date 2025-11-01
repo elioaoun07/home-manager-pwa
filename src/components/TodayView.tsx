@@ -12,10 +12,12 @@ interface TodayViewProps {
   onToggleComplete: (id: string) => void;
   onEdit: (item: ItemWithDetails) => void;
   onDelete: (id: string) => void;
+  onArchive?: (id: string) => void;
+  onUnarchive?: (id: string) => void;
   viewDensity?: "compact" | "comfy";
 }
 
-export function TodayView({ items, onToggleComplete, onEdit, onDelete, viewDensity = "comfy" }: TodayViewProps) {
+export function TodayView({ items, onToggleComplete, onEdit, onDelete, onArchive, onUnarchive, viewDensity = "comfy" }: TodayViewProps) {
   const today = new Date();
   
   // State for collapsible sections (collapsed by default: overdue, completed)
@@ -169,6 +171,8 @@ export function TodayView({ items, onToggleComplete, onEdit, onDelete, viewDensi
                   onView={onEdit}
                   onEdit={onEdit}
                   onDelete={onDelete}
+                  onArchive={onArchive}
+                  onUnarchive={onUnarchive}
                   viewDensity={viewDensity}
                 />
               </motion.div>

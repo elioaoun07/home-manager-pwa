@@ -34,9 +34,12 @@ import {
   createSubtask,
   getCategories,
   createCategory,
+  archiveItem,
+  unarchiveItem,
 } from "@/lib/database";
 import { saveAlarms } from "@/lib/alertManager";
 import { enhanceCategoriesWithKeywords } from "@/config/categoryKeywords";
+import { Undo2 } from "lucide-react";
 
 function HomeContent() {
   const [items, setItems] = useState<ItemWithDetails[]>([]);
@@ -196,7 +199,22 @@ function HomeContent() {
         <div className="flex items-center gap-2">
           <span className="font-semibold">{newItem.title}</span>
           <span className="text-sm text-muted-foreground">has been added</span>
-        </div>
+        </div>,
+        {
+          action: {
+            label: <div className="flex items-center gap-1"><Undo2 size={14} /> Undo</div>,
+            onClick: async () => {
+              try {
+                await deleteItem(newItem.id);
+                await loadItems();
+                toast.success(`${newItem.title} removed`);
+              } catch (error) {
+                console.error("Error removing item:", error);
+                toast.error("Failed to undo");
+              }
+            },
+          },
+        }
       );
     } catch (error) {
       console.error("Error creating item:", error);
@@ -209,6 +227,7 @@ function HomeContent() {
     if (!item) return;
 
     try {
+      const previousStatus = item.status;
       const newStatus: ItemStatus = item.status === "done" ? "pending" : "done";
       await updateItem(id, { status: newStatus });
 
@@ -223,7 +242,24 @@ function HomeContent() {
           <span className="text-sm text-muted-foreground">
             marked as {newStatus === "done" ? "complete" : "incomplete"}
           </span>
-        </div>
+        </div>,
+        {
+          action: {
+            label: <div className="flex items-center gap-1"><Undo2 size={14} /> Undo</div>,
+            onClick: async () => {
+              try {
+                await updateItem(id, { status: previousStatus });
+                setItems((prev) =>
+                  prev.map((i) => (i.id === id ? { ...i, status: previousStatus } : i))
+                );
+                toast.success(`${item.title} reverted to ${previousStatus}`);
+              } catch (error) {
+                console.error("Error reverting status:", error);
+                toast.error("Failed to undo");
+              }
+            },
+          },
+        }
       );
     } catch (error) {
       console.error("Error toggling completion:", error);
@@ -246,18 +282,152 @@ function HomeContent() {
     if (!item) return;
 
     try {
+      // Store the deleted item for undo
+      const deletedItem = { ...item };
+      
       await deleteItem(id);
       setItems((prev) => prev.filter((i) => i.id !== id));
 
       toast.error(
-        <div className="flex items-center gap-2">
-          <span className="font-semibold">{item.title}</span>
-          <span className="text-sm text-muted-foreground">has been deleted</span>
-        </div>
+        <div className="flex items-center justify-between w-full gap-3">
+          <div className="flex items-center gap-2">
+            <span className="font-semibold">{item.title}</span>
+            <span className="text-sm text-muted-foreground">has been deleted</span>
+          </div>
+        </div>,
+        {
+          action: {
+            label: <div className="flex items-center gap-1"><Undo2 size={14} /> Undo</div>,
+            onClick: async () => {
+              try {
+                // Recreate the item
+                const recreated = await createItem({
+                  title: deletedItem.title,
+                  description: deletedItem.description,
+                  type: deletedItem.type,
+                  status: deletedItem.status,
+                  priority: deletedItem.priority,
+                  is_public: deletedItem.is_public,
+                });
+
+                // Restore event details if any
+                if (deletedItem.type === "event" && deletedItem.event_details) {
+                  await upsertEventDetails({
+                    item_id: recreated.id,
+                    start_at: deletedItem.event_details.start_at,
+                    end_at: deletedItem.event_details.end_at,
+                    location_text: deletedItem.event_details.location_text,
+                  });
+                }
+
+                // Restore reminder details if any
+                if (deletedItem.type === "reminder" && deletedItem.reminder_details) {
+                  await upsertReminderDetails({
+                    item_id: recreated.id,
+                    due_at: deletedItem.reminder_details.due_at,
+                    has_checklist: deletedItem.reminder_details.has_checklist || false,
+                  });
+                }
+
+                // Restore categories if any
+                if (deletedItem.categories && deletedItem.categories.length > 0) {
+                  await setItemCategories(
+                    recreated.id,
+                    deletedItem.categories.map((c) => c.id)
+                  );
+                }
+
+                await loadItems();
+                toast.success(`${deletedItem.title} restored`);
+              } catch (error) {
+                console.error("Error restoring item:", error);
+                toast.error("Failed to restore item");
+              }
+            },
+          },
+        }
       );
     } catch (error) {
       console.error("Error deleting item:", error);
       toast.error("Failed to delete item");
+    }
+  };
+
+  const handleArchive = async (id: string) => {
+    const item = items.find((i) => i.id === id);
+    if (!item) return;
+
+    try {
+      await archiveItem(id);
+      setItems((prev) =>
+        prev.map((i) => (i.id === id ? { ...i, archived_at: new Date().toISOString() } : i))
+      );
+
+      toast.success(
+        <div className="flex items-center gap-2">
+          <span className="font-semibold">{item.title}</span>
+          <span className="text-sm text-muted-foreground">archived</span>
+        </div>,
+        {
+          action: {
+            label: <div className="flex items-center gap-1"><Undo2 size={14} /> Undo</div>,
+            onClick: async () => {
+              try {
+                await unarchiveItem(id);
+                setItems((prev) =>
+                  prev.map((i) => (i.id === id ? { ...i, archived_at: null } : i))
+                );
+                toast.success(`${item.title} unarchived`);
+              } catch (error) {
+                console.error("Error unarchiving item:", error);
+                toast.error("Failed to undo");
+              }
+            },
+          },
+        }
+      );
+    } catch (error) {
+      console.error("Error archiving item:", error);
+      toast.error("Failed to archive item");
+    }
+  };
+
+  const handleUnarchive = async (id: string) => {
+    const item = items.find((i) => i.id === id);
+    if (!item) return;
+
+    try {
+      await unarchiveItem(id);
+      setItems((prev) =>
+        prev.map((i) => (i.id === id ? { ...i, archived_at: null } : i))
+      );
+
+      toast.success(
+        <div className="flex items-center gap-2">
+          <span className="font-semibold">{item.title}</span>
+          <span className="text-sm text-muted-foreground">unarchived</span>
+        </div>,
+        {
+          action: {
+            label: <div className="flex items-center gap-1"><Undo2 size={14} /> Undo</div>,
+            onClick: async () => {
+              try {
+                await archiveItem(id);
+                setItems((prev) =>
+                  prev.map((i) => (i.id === id ? { ...i, archived_at: new Date().toISOString() } : i))
+                );
+                toast.success(`${item.title} archived`);
+              } catch (error) {
+                console.error("Error archiving item:", error);
+                toast.error("Failed to undo");
+              }
+            },
+          },
+        }
+      );
+    } catch (error) {
+      console.error("Error unarchiving item:", error);
+      toast.error("Failed to unarchive item");
     }
   };
 
@@ -286,6 +456,9 @@ function HomeContent() {
       }
 
       if (editingItem?.id) {
+        // Store previous state for undo
+        const previousItem = { ...editingItem };
+        
         // Update existing item
         await updateItem(editingItem.id, data);
 
@@ -316,7 +489,59 @@ function HomeContent() {
           await setItemCategories(editingItem.id, data.categories);
         }
 
-        toast.success("Item updated successfully!");
+        toast.success(
+          `${data.title || previousItem.title} updated successfully!`,
+          {
+            action: {
+              label: <div className="flex items-center gap-1"><Undo2 size={14} /> Undo</div>,
+              onClick: async () => {
+                try {
+                  // Revert the item to previous state
+                  await updateItem(editingItem.id, {
+                    title: previousItem.title,
+                    description: previousItem.description,
+                    status: previousItem.status,
+                    priority: previousItem.priority,
+                    is_public: previousItem.is_public,
+                  });
+
+                  // Revert event details if applicable
+                  if (previousItem.type === "event" && previousItem.event_details) {
+                    await upsertEventDetails({
+                      item_id: editingItem.id,
+                      start_at: previousItem.event_details.start_at,
+                      end_at: previousItem.event_details.end_at,
+                      location_text: previousItem.event_details.location_text,
+                    });
+                  }
+
+                  // Revert reminder details if applicable
+                  if (previousItem.type === "reminder" && previousItem.reminder_details) {
+                    await upsertReminderDetails({
+                      item_id: editingItem.id,
+                      due_at: previousItem.reminder_details.due_at,
+                      has_checklist: previousItem.reminder_details.has_checklist || false,
+                    });
+                  }
+
+                  // Revert categories
+                  if (previousItem.categories && previousItem.categories.length > 0) {
+                    await setItemCategories(
+                      editingItem.id,
+                      previousItem.categories.map((c) => c.id)
+                    );
+                  }
+
+                  await loadItems();
+                  toast.success(`${previousItem.title} reverted`);
+                } catch (error) {
+                  console.error("Error reverting item:", error);
+                  toast.error("Failed to undo");
+                }
+              },
+            },
+          }
+        );
       } else {
         // Create new item
         const newItem = await createItem(data);
@@ -510,6 +735,8 @@ function HomeContent() {
                   onToggleComplete={handleToggleComplete}
                   onEdit={handleView}
                   onDelete={handleDelete}
+                  onArchive={handleArchive}
+                  onUnarchive={handleUnarchive}
                   viewDensity={viewDensity}
                 />
               )}
@@ -522,6 +749,8 @@ function HomeContent() {
                   onView={handleView}
                   onEdit={handleView}
                   onDelete={handleDelete}
+                  onArchive={handleArchive}
+                  onUnarchive={handleUnarchive}
                   viewDensity={viewDensity}
                 />
               )}
@@ -533,6 +762,8 @@ function HomeContent() {
                   onView={handleView}
                   onEdit={handleView}
                   onDelete={handleDelete}
+                  onArchive={handleArchive}
+                  onUnarchive={handleUnarchive}
                   viewDensity={viewDensity}
                   showArchived={showArchived}
                 />
@@ -544,6 +775,8 @@ function HomeContent() {
                   onToggleComplete={handleToggleComplete}
                   onEdit={handleView}
                   onDelete={handleDelete}
+                  onArchive={handleArchive}
+                  onUnarchive={handleUnarchive}
                   categories={categories}
                   viewDensity={viewDensity}
                 />

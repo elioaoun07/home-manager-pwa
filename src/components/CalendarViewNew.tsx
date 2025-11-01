@@ -17,13 +17,15 @@ interface CalendarViewNewProps {
   onToggleComplete: (id: string) => void;
   onEdit: (item: ItemWithDetails) => void;
   onDelete: (id: string) => void;
+  onArchive?: (id: string) => void;
+  onUnarchive?: (id: string) => void;
   categories: { id: string; name: string; color_hex?: string }[];
   viewDensity?: "compact" | "comfy";
 }
 
 type ViewMode = "month" | "week" | "3day";
 
-export function CalendarViewNew({ items, onToggleComplete, onEdit, onDelete, categories, viewDensity = "comfy" }: CalendarViewNewProps) {
+export function CalendarViewNew({ items, onToggleComplete, onEdit, onDelete, onArchive, onUnarchive, categories, viewDensity = "comfy" }: CalendarViewNewProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<ViewMode>("week");
   const [showFilters, setShowFilters] = useState(false);
@@ -153,14 +155,14 @@ export function CalendarViewNew({ items, onToggleComplete, onEdit, onDelete, cat
         dates.push(new Date(startOfWeek));
         startOfWeek.setDate(startOfWeek.getDate() + 1);
       }
-    } else { // 3day
-      const yesterday = new Date(today);
-      yesterday.setDate(today.getDate() - 1);
-      dates.push(yesterday);
+    } else { // 3day - show today and next 2 days
       dates.push(new Date(today));
       const tomorrow = new Date(today);
       tomorrow.setDate(today.getDate() + 1);
       dates.push(tomorrow);
+      const dayAfter = new Date(today);
+      dayAfter.setDate(today.getDate() + 2);
+      dates.push(dayAfter);
     }
     
     return dates;
@@ -199,6 +201,48 @@ export function CalendarViewNew({ items, onToggleComplete, onEdit, onDelete, cat
   };
 
   const activeFilterCount = selectedTypes.length + selectedPriorities.length + selectedCategories.length;
+
+  // Calculate smart time range for week/3day view
+  const getSmartTimeRange = (dates: Date[]) => {
+    let minHour = 23;
+    let maxHour = 0;
+    let hasEvents = false;
+
+    dates.forEach(date => {
+      const dayItems = getItemsForDate(date);
+      dayItems.forEach(item => {
+        if (item.type === "event" && item.event_details && !item.event_details.all_day) {
+          hasEvents = true;
+          const startTime = new Date(item.event_details.start_at);
+          const endTime = new Date(item.event_details.end_at);
+          const startHour = startTime.getHours();
+          const endHour = endTime.getHours();
+          
+          minHour = Math.min(minHour, startHour);
+          maxHour = Math.max(maxHour, endHour);
+        }
+        if (item.type === "reminder" && item.reminder_details?.due_at) {
+          hasEvents = true;
+          const dueTime = new Date(item.reminder_details.due_at);
+          const dueHour = dueTime.getHours();
+          
+          minHour = Math.min(minHour, dueHour);
+          maxHour = Math.max(maxHour, dueHour);
+        }
+      });
+    });
+
+    // If no events, return empty range
+    if (!hasEvents) {
+      return { minHour: 0, maxHour: 0, hasEvents: false };
+    }
+
+    // Add padding: 1 hour before and after
+    minHour = Math.max(0, minHour - 1);
+    maxHour = Math.min(23, maxHour);
+
+    return { minHour, maxHour, hasEvents: true };
+  };
 
   return (
     <div className="space-y-4 pb-24">
@@ -615,6 +659,8 @@ export function CalendarViewNew({ items, onToggleComplete, onEdit, onDelete, cat
                                 onView={onEdit}
                                 onEdit={onEdit}
                                 onDelete={onDelete}
+                                onArchive={onArchive}
+                                onUnarchive={onUnarchive}
                                 viewDensity={viewDensity}
                               />
                             </div>
@@ -634,6 +680,31 @@ export function CalendarViewNew({ items, onToggleComplete, onEdit, onDelete, cat
         ) : (
           /* Horizontal Timeline view for Week/3Day - Optimized for mobile */
           <div className="space-y-2 overflow-x-auto">
+            {(() => {
+              const { minHour, maxHour, hasEvents } = getSmartTimeRange(dates);
+              
+              // Show empty state if no events
+              if (!hasEvents) {
+                return (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="flex flex-col items-center justify-center py-16 px-4"
+                  >
+                    <div className="w-20 h-20 mb-4 rounded-full bg-gradient-to-br from-primary/20 to-blue-500/20 flex items-center justify-center">
+                      <Calendar size={40} className="text-primary" />
+                    </div>
+                    <h3 className="text-xl font-bold mb-2">No Events Scheduled</h3>
+                    <p className="text-sm text-muted-foreground text-center max-w-sm">
+                      You don't have any events or reminders during this {viewMode === "3day" ? "3-day" : "week"} period.
+                      Tap the + button to create one!
+                    </p>
+                  </motion.div>
+                );
+              }
+
+              return (
+                <>
             {/* Day headers */}
             <div className="grid gap-px sticky top-0 bg-background z-10 pb-1 border-b-2" style={{ gridTemplateColumns: `32px repeat(${dates.length}, 1fr)`, minWidth: dates.length === 7 ? '100%' : 'auto' }}>
               <div className="border-r"></div> {/* Empty corner for time column */}
@@ -693,89 +764,175 @@ export function CalendarViewNew({ items, onToggleComplete, onEdit, onDelete, cat
                 })}
               </div>
 
-              {/* Hourly time slots (0 to 23 - 24 hour format) */}
-              {Array.from({ length: 24 }, (_, i) => i).map(hour => {
-                return (
-                  <div
-                    key={hour}
-                    className="grid gap-px"
-                    style={{ gridTemplateColumns: `32px repeat(${dates.length}, 1fr)`, minWidth: dates.length === 7 ? '100%' : 'auto' }}
-                  >
-                    <div className="flex items-start justify-center text-[9px] text-muted-foreground font-bold pt-1 border-r">
-                      {hour.toString().padStart(2, '0')}
-                    </div>
-                    {dates.map((date, dateIndex) => {
-                      const hourItems = getItemsForDate(date).filter(item => {
-                        if (item.type === "event" && item.event_details && !item.event_details.all_day) {
-                          const startTime = new Date(item.event_details.start_at);
-                          return startTime.getHours() === hour;
-                        }
-                        if (item.type === "reminder" && item.reminder_details?.due_at) {
-                          const dueTime = new Date(item.reminder_details.due_at);
-                          return dueTime.getHours() === hour;
-                        }
-                        return false;
-                      });
-
-                      return (
-                        <div
-                          key={dateIndex}
-                          className={`min-h-16 p-1 border-b border-r ${
-                            isToday(date) ? 'bg-primary/5' : ''
-                          } hover:bg-muted/30 transition-colors relative overflow-hidden`}
-                        >
-                          <div className="space-y-1 w-full">
-                            {hourItems.map(item => {
-                              const categoryColor = item.categories?.[0]?.color_hex || '#6366f1';
-                              const startTime = item.type === "event" && item.event_details
-                                ? new Date(item.event_details.start_at)
-                                : item.reminder_details?.due_at
-                                ? new Date(item.reminder_details.due_at)
-                                : null;
-                              
-                              // Commented out for future use
-                              // const endTime = item.type === "event" && item.event_details
-                              //   ? new Date(item.event_details.end_at)
-                              //   : null;
-
-                              // Calculate duration for future use
-                              // const duration = endTime && startTime
-                              //   ? Math.round((endTime.getTime() - startTime.getTime()) / (1000 * 60 * 60) * 10) / 10
-                              //   : 0;
-
-                              return (
-                                <div
-                                  key={item.id}
-                                  onClick={() => onEdit(item)}
-                                  className="text-[10px] px-1.5 py-1.5 mb-1 rounded cursor-pointer hover:brightness-110 transition-all w-full leading-tight"
-                                  style={{ 
-                                    backgroundColor: categoryColor,
-                                    color: 'white'
-                                  }}
-                                >
-                                  <div className="font-semibold line-clamp-2">
-                                    {item.title}
-                                  </div>
-                                  {startTime && (
-                                    <div className="text-[8px] opacity-80 mt-0.5">
-                                      {startTime.toLocaleTimeString('en-US', { 
-                                        hour: '2-digit', 
-                                        minute: '2-digit',
-                                        hour12: false
-                                      })}
-                                    </div>
-                                  )}
-                                </div>
-                              );
-                            })}
+              {/* Hourly time slots - Smart range */}
+              <div className="relative">
+                {Array.from({ length: maxHour - minHour + 1 }, (_, i) => minHour + i).map(hour => {
+                  return (
+                    <div
+                      key={hour}
+                      className="grid gap-px"
+                      style={{ 
+                        gridTemplateColumns: `32px repeat(${dates.length}, 1fr)`, 
+                        minWidth: dates.length === 7 ? '100%' : 'auto',
+                        height: '60px' // Fixed height per hour slot
+                      }}
+                    >
+                      <div className="flex items-start justify-center text-[9px] text-muted-foreground font-bold pt-1 border-r">
+                        {hour.toString().padStart(2, '0')}
+                      </div>
+                      {dates.map((date, dateIndex) => {
+                        return (
+                          <div
+                            key={dateIndex}
+                            className={`border-b border-r ${
+                              isToday(date) ? 'bg-primary/5' : ''
+                            } hover:bg-muted/30 transition-colors relative`}
+                          >
+                            {/* Events will be absolutely positioned */}
                           </div>
-                        </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })}
+                
+                {/* Absolutely positioned events that span multiple hours */}
+                <div 
+                  className="absolute top-0 left-0 right-0 bottom-0 pointer-events-none"
+                  style={{ 
+                    gridTemplateColumns: `32px repeat(${dates.length}, 1fr)`,
+                    display: 'grid',
+                    gap: '1px'
+                  }}
+                >
+                  <div></div> {/* Spacer for time column */}
+                  {dates.map((date, dateIndex) => {
+                    const dayItems = getItemsForDate(date).filter(item => 
+                      item.type === "event" && item.event_details && !item.event_details.all_day ||
+                      item.type === "reminder" && item.reminder_details?.due_at
+                    );
+
+                    // Calculate overlapping groups
+                    const sortedItems = dayItems
+                      .map(item => {
+                        const startTime = item.type === "event" && item.event_details
+                          ? new Date(item.event_details.start_at)
+                          : item.reminder_details?.due_at
+                          ? new Date(item.reminder_details.due_at)
+                          : new Date();
+                        
+                        const endTime = item.type === "event" && item.event_details
+                          ? new Date(item.event_details.end_at)
+                          : new Date(startTime.getTime() + 30 * 60 * 1000); // 30 min default for reminders
+
+                        return { item, startTime, endTime };
+                      })
+                      .sort((a, b) => a.startTime.getTime() - b.startTime.getTime());
+
+                    // Detect overlaps and assign columns
+                    const itemsWithLayout = sortedItems.map((itemData, idx) => {
+                      let column = 0;
+                      let maxColumns = 1;
+                      
+                      // Check for overlaps with previous items
+                      const overlappingItems = sortedItems.slice(0, idx).filter(prevItem => 
+                        prevItem.endTime > itemData.startTime && prevItem.startTime < itemData.endTime
                       );
-                    })}
-                  </div>
-                );
-              })}
+
+                      if (overlappingItems.length > 0) {
+                        // Find occupied columns
+                        const occupiedColumns = new Set(
+                          sortedItems.slice(0, idx)
+                            .filter(prevItem => prevItem.endTime > itemData.startTime && prevItem.startTime < itemData.endTime)
+                            .map(prevItem => {
+                              const prevIndex = sortedItems.indexOf(prevItem);
+                              return itemsWithLayout[prevIndex]?.column || 0;
+                            })
+                        );
+                        
+                        // Find first available column
+                        while (occupiedColumns.has(column)) {
+                          column++;
+                        }
+                        maxColumns = Math.max(column + 1, overlappingItems.length + 1);
+                      }
+
+                      // Calculate total columns needed for this time period
+                      const allOverlapping = sortedItems.filter(otherItem => 
+                        otherItem.endTime > itemData.startTime && otherItem.startTime < itemData.endTime
+                      );
+                      maxColumns = Math.max(maxColumns, allOverlapping.length);
+
+                      return { ...itemData, column, maxColumns };
+                    });
+
+                    return (
+                      <div key={dateIndex} className="relative pointer-events-none">
+                        {itemsWithLayout.map(({ item, startTime, endTime, column, maxColumns }) => {
+                          const categoryColor = item.categories?.[0]?.color_hex || '#6366f1';
+                          
+                          // Calculate position
+                          const startHour = startTime.getHours();
+                          const startMinute = startTime.getMinutes();
+                          const endHour = endTime.getHours();
+                          const endMinute = endTime.getMinutes();
+                          
+                          const topOffset = ((startHour - minHour) * 60 + startMinute);
+                          const duration = ((endHour - startHour) * 60 + (endMinute - startMinute));
+                          
+                          const top = topOffset; // 1px per minute
+                          const height = Math.max(duration, 20); // Minimum 20px height
+
+                          // Width calculation for overlapping events
+                          const width = maxColumns > 1 ? `${100 / maxColumns}%` : '100%';
+                          const left = maxColumns > 1 ? `${(column * 100) / maxColumns}%` : '0%';
+
+                          return (
+                            <div
+                              key={item.id}
+                              onClick={() => onEdit(item)}
+                              className="absolute rounded cursor-pointer hover:brightness-110 transition-all pointer-events-auto overflow-hidden shadow-sm border border-white/20"
+                              style={{ 
+                                backgroundColor: categoryColor,
+                                color: 'white',
+                                top: `${top}px`,
+                                height: `${height}px`,
+                                left,
+                                width: maxColumns > 1 ? `calc(${width} - 2px)` : 'calc(100% - 4px)',
+                                marginLeft: '2px',
+                                zIndex: 10 + column
+                              }}
+                            >
+                              <div className="px-1.5 py-1 h-full flex flex-col text-[10px]">
+                                <div className="font-bold line-clamp-2 leading-tight">
+                                  {item.title}
+                                </div>
+                                <div className="text-[8px] opacity-90 mt-0.5">
+                                  {startTime.toLocaleTimeString('en-US', { 
+                                    hour: '2-digit', 
+                                    minute: '2-digit',
+                                    hour12: false
+                                  })}
+                                  {' - '}
+                                  {endTime.toLocaleTimeString('en-US', { 
+                                    hour: '2-digit', 
+                                    minute: '2-digit',
+                                    hour12: false
+                                  })}
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
+                </>
+              );
+            })()}
           </div>
         )}
       </div>

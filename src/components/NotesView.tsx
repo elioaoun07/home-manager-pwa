@@ -12,11 +12,13 @@ interface NotesViewProps {
   onEdit: (item: ItemWithDetails) => void;
   onDelete: (id: string) => void;
   onView: (item: ItemWithDetails) => void;
+  onArchive?: (id: string) => void;
+  onUnarchive?: (id: string) => void;
   viewDensity?: "compact" | "comfy";
   showArchived?: boolean;
 }
 
-export function NotesView({ items, onToggleComplete, onEdit, onDelete, viewDensity = "comfy", showArchived = false }: NotesViewProps) {
+export function NotesView({ items, onToggleComplete, onEdit, onDelete, onArchive, onUnarchive, viewDensity = "comfy", showArchived = false }: NotesViewProps) {
   // Filter for notes: items with type='note'
   const notes = items.filter(item => item.type === "note");
 
@@ -107,6 +109,8 @@ export function NotesView({ items, onToggleComplete, onEdit, onDelete, viewDensi
                 onView={onEdit}
                 onEdit={onEdit}
                 onDelete={onDelete}
+                onArchive={onArchive}
+                onUnarchive={onUnarchive}
                 viewDensity={viewDensity}
               />
             </motion.div>
@@ -162,6 +166,8 @@ export function NotesView({ items, onToggleComplete, onEdit, onDelete, viewDensi
                       onView={onEdit}
                       onEdit={onEdit}
                       onDelete={onDelete}
+                      onArchive={onArchive}
+                      onUnarchive={onUnarchive}
                       viewDensity={viewDensity}
                     />
                   </motion.div>
@@ -172,7 +178,7 @@ export function NotesView({ items, onToggleComplete, onEdit, onDelete, viewDensi
         </motion.div>
       )}
 
-      {/* Archived Notes - only show when showArchived is true */}
+      {/* Archived Notes */}
       {showArchived && archivedNotes.length > 0 && (
         <motion.div className="mt-6">
           <motion.button
