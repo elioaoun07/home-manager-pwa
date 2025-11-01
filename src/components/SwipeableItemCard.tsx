@@ -137,8 +137,8 @@ export function SwipeableItemCard({
 
   // iOS-style swipe behavior
   const SWIPE_THRESHOLD = 60; // Minimum drag to trigger swipe state
-  const SWIPE_OPEN_AMOUNT = -80; // How far to keep it open (negative for left swipe)
-  const SWIPE_RIGHT_OPEN_AMOUNT = 80; // How far to keep it open for right swipe
+  const SWIPE_OPEN_AMOUNT = viewDensity === "compact" ? -140 : -160; // How far to keep it open (negative for left swipe)
+  const SWIPE_RIGHT_OPEN_AMOUNT = viewDensity === "compact" ? 100 : 120; // How far to keep it open for right swipe
 
   // Track drag direction
   const handleDrag = (_event: MouseEvent | TouchEvent | PointerEvent, info: { offset: { x: number; y: number } }) => {
@@ -206,7 +206,7 @@ export function SwipeableItemCard({
           <div className={`absolute inset-0 bg-gradient-to-r ${swipeGradient}`} />
           
           {/* Right side - Edit/Delete icons (shown when swiping LEFT) */}
-          <div className="absolute inset-y-0 right-0 flex items-center gap-3 px-4 z-10">
+          <div className="absolute inset-y-0 right-0 flex items-center gap-4 px-4 z-10">
             <button
               onClick={(e) => {
                 e.stopPropagation();
@@ -216,8 +216,8 @@ export function SwipeableItemCard({
               }}
               className="flex flex-col items-center gap-0.5 hover:scale-110 transition-transform active:scale-95"
             >
-              <Edit size={20} className="text-white" strokeWidth={2.5} />
-              <span className="text-[10px] font-semibold text-white">Edit</span>
+              <Edit size={22} className="text-white" strokeWidth={2.5} />
+              <span className="text-[11px] font-semibold text-white whitespace-nowrap">Edit</span>
             </button>
             <button
               onClick={(e) => {
@@ -230,8 +230,8 @@ export function SwipeableItemCard({
               }}
               className="flex flex-col items-center gap-0.5 hover:scale-110 transition-transform active:scale-95"
             >
-              <Trash2 size={20} className="text-white" strokeWidth={2.5} />
-              <span className="text-[10px] font-semibold text-white">Delete</span>
+              <Trash2 size={22} className="text-white" strokeWidth={2.5} />
+              <span className="text-[11px] font-semibold text-white whitespace-nowrap">Delete</span>
             </button>
           </div>
 
@@ -250,8 +250,8 @@ export function SwipeableItemCard({
               }}
               className="flex flex-col items-center gap-0.5 hover:scale-110 transition-transform active:scale-95"
             >
-              {isArchived ? <RotateCcw size={20} className="text-white" strokeWidth={2.5} /> : <Archive size={20} className="text-white" strokeWidth={2.5} />}
-              <span className="text-[10px] font-semibold text-white">{isArchived ? 'Restore' : 'Archive'}</span>
+              {isArchived ? <RotateCcw size={22} className="text-white" strokeWidth={2.5} /> : <Archive size={22} className="text-white" strokeWidth={2.5} />}
+              <span className="text-[11px] font-semibold text-white whitespace-nowrap">{isArchived ? 'Restore' : 'Archive'}</span>
             </button>
           </div>
 
