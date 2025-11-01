@@ -141,7 +141,7 @@ export function SwipeableItemCard({
   const SWIPE_RIGHT_OPEN_AMOUNT = 80; // How far to keep it open for right swipe
 
   // Track drag direction
-  const handleDrag = (_event: any, info: any) => {
+  const handleDrag = (_event: MouseEvent | TouchEvent | PointerEvent, info: { offset: { x: number; y: number } }) => {
     if (info.offset.x < -10) {
       setDragDirection('left');
     } else if (info.offset.x > 10) {
@@ -150,7 +150,7 @@ export function SwipeableItemCard({
   };
 
   // Handle drag end - determine if we should keep it open
-  const handleDragEnd = (_event: any, info: any) => {
+  const handleDragEnd = (_event: MouseEvent | TouchEvent | PointerEvent, info: { offset: { x: number; y: number } }) => {
     const offset = info.offset.x;
     setIsDragging(false);
 
