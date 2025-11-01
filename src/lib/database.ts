@@ -38,7 +38,7 @@ export async function getItems(filters?: {
   priorities?: string[];
   statuses?: string[];
   categoryIds?: string[];
-  isArchived?: boolean;
+  isArchived?: boolean | 'all';
 }): Promise<ItemWithDetails[]> {
   const user = await getCurrentUser();
   if (!user) throw new Error('User not authenticated');
@@ -50,7 +50,8 @@ export async function getItems(filters?: {
       event_details!event_details_item_id_fkey (*),
       reminder_details!reminder_details_item_id_fkey (*),
       subtasks (*),
-      recurrence_rules (*)
+      recurrence_rules (*),
+      alerts (*)
     `);
 
   // Apply filters
@@ -63,14 +64,18 @@ export async function getItems(filters?: {
   if (filters?.statuses && filters.statuses.length > 0) {
     query = query.in('status', filters.statuses);
   }
-  if (filters?.isArchived !== undefined) {
-    if (filters.isArchived) {
-      query = query.not('archived_at', 'is', null);
-    } else {
-      query = query.is('archived_at', null);
-    }
+  
+  // Handle archived filter
+  // 'all' = show both archived and non-archived
+  // true = show only archived
+  // false = show only non-archived
+  // undefined = default to non-archived only
+  if (filters?.isArchived === 'all') {
+    // Don't filter by archived_at - show everything
+  } else if (filters?.isArchived === true) {
+    query = query.not('archived_at', 'is', null);
   } else {
-    // Default: exclude archived items
+    // false or undefined - exclude archived items
     query = query.is('archived_at', null);
   }
 
@@ -227,6 +232,37 @@ export async function archiveItem(id: string): Promise<Item> {
 
 export async function unarchiveItem(id: string): Promise<Item> {
   return updateItem(id, { archived_at: undefined });
+}
+
+// Auto-archive completed items older than 1 week
+export async function autoArchiveOldCompletedItems(): Promise<number> {
+  const user = await getCurrentUser();
+  if (!user) throw new Error('User not authenticated');
+
+  const oneWeekAgo = new Date();
+  oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+
+  // Find completed items older than 1 week that aren't already archived
+  const { data: itemsToArchive, error: fetchError } = await supabase
+    .from('items')
+    .select('id, updated_at')
+    .eq('user_id', user.id)
+    .eq('status', 'done')
+    .is('archived_at', null)
+    .lt('updated_at', oneWeekAgo.toISOString());
+
+  if (fetchError) throw fetchError;
+  if (!itemsToArchive || itemsToArchive.length === 0) return 0;
+
+  // Archive them
+  const { error: updateError } = await supabase
+    .from('items')
+    .update({ archived_at: new Date().toISOString() })
+    .in('id', itemsToArchive.map(item => item.id));
+
+  if (updateError) throw updateError;
+  
+  return itemsToArchive.length;
 }
 
 // Event Details

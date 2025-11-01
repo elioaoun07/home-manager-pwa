@@ -2,7 +2,7 @@
 
 import { ItemWithDetails } from "@/types";
 import { formatRelativeTime, formatTime } from "@/lib/utils";
-import { Bell, Calendar, Tag, Trash2, Edit, Clock, CheckCircle2, Circle, Globe, Lock, ListChecks, MapPin, Flame } from "lucide-react";
+import { Bell, Calendar, Tag, Trash2, Edit, Clock, CheckCircle2, Circle, Globe, Lock, ListChecks, MapPin, Flame, StickyNote } from "lucide-react";
 import { useEffect, useState } from "react";
 
 interface ItemCardProps {
@@ -23,6 +23,7 @@ export function ItemCard({ item, onToggleComplete, onView, onEdit, onDelete, vie
     } else if (item.type === "reminder" && item.reminder_details?.due_at) {
       return new Date(item.reminder_details.due_at);
     }
+    // Notes don't have dates
     return null;
   };
 
@@ -30,7 +31,11 @@ export function ItemCard({ item, onToggleComplete, onView, onEdit, onDelete, vie
   const isCompleted = item.status === "done";
   const isOverdue = itemDate && !isCompleted && itemDate < new Date();
 
-  const config = item.type === "reminder" ? { icon: Bell, color: "text-blue-600", bgColor: "bg-blue-50" } : { icon: Calendar, color: "text-purple-600", bgColor: "bg-purple-50" };
+  const config = item.type === "reminder" 
+    ? { icon: Bell, color: "text-blue-600", bgColor: "bg-blue-50" } 
+    : item.type === "event"
+    ? { icon: Calendar, color: "text-purple-600", bgColor: "bg-purple-50" }
+    : { icon: StickyNote, color: "text-orange-600", bgColor: "bg-orange-50" };
   const Icon = config.icon;
   const completedSubtasks = item.subtasks?.filter(st => st.done_at).length || 0;
   const totalSubtasks = item.subtasks?.length || 0;

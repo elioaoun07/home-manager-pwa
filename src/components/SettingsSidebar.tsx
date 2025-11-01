@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Settings, LayoutGrid, List, User, Info, Palette, Bell } from "lucide-react";
+import { X, Settings, LayoutGrid, List, User, Info, Palette, Bell, Archive } from "lucide-react";
 import { useEffect } from "react";
 
 export type ViewDensity = "compact" | "comfy";
@@ -11,9 +11,18 @@ interface SettingsSidebarProps {
   onClose: () => void;
   viewDensity: ViewDensity;
   onViewDensityChange: (density: ViewDensity) => void;
+  showArchived: boolean;
+  onShowArchivedChange: (show: boolean) => void;
 }
 
-export function SettingsSidebar({ isOpen, onClose, viewDensity, onViewDensityChange }: SettingsSidebarProps) {
+export function SettingsSidebar({ 
+  isOpen, 
+  onClose, 
+  viewDensity, 
+  onViewDensityChange,
+  showArchived,
+  onShowArchivedChange 
+}: SettingsSidebarProps) {
   // Handle escape key
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -206,6 +215,62 @@ export function SettingsSidebar({ isOpen, onClose, viewDensity, onViewDensityCha
                     </div>
                   </motion.button>
                 </div>
+              </div>
+
+              {/* View Archived Toggle */}
+              <div>
+                <div className="flex items-center gap-2 mb-3">
+                  <Archive className="w-4 h-4 text-primary" />
+                  <h3 className="font-semibold text-sm">Archived Items</h3>
+                </div>
+                <p className="text-xs text-muted-foreground mb-3">
+                  Show items that have been archived
+                </p>
+                
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => onShowArchivedChange(!showArchived)}
+                  className={`
+                    w-full p-4 rounded-xl border-2 transition-all
+                    ${showArchived
+                      ? "bg-gradient-to-br from-amber-500/10 to-orange-500/5 border-amber-500 shadow-md"
+                      : "glass border-white/20 dark:border-gray-700/50 hover:border-amber-500/30"
+                    }
+                  `}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className={`
+                        p-2 rounded-lg transition-colors
+                        ${showArchived 
+                          ? "bg-amber-500/20" 
+                          : "bg-muted"
+                        }
+                      `}>
+                        <Archive className={`w-5 h-5 ${showArchived ? "text-amber-500" : "text-muted-foreground"}`} />
+                      </div>
+                      <div className="text-left">
+                        <div className="font-semibold text-sm">
+                          {showArchived ? "Showing Archived" : "Hide Archived"}
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          {showArchived ? "Viewing archived items" : "Only active items"}
+                        </p>
+                      </div>
+                    </div>
+                    <div className={`
+                      w-12 h-6 rounded-full transition-colors relative
+                      ${showArchived ? "bg-amber-500" : "bg-muted"}
+                    `}>
+                      <motion.div
+                        animate={{ x: showArchived ? 24 : 2 }}
+                        transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                        className="absolute top-1 w-4 h-4 bg-white rounded-full shadow-md"
+                      />
+                    </div>
+                  </div>
+                </motion.button>
               </div>
 
               {/* Coming Soon Sections */}

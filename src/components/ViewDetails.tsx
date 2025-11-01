@@ -16,7 +16,9 @@ import {
   Circle,
   X,
   Edit2,
-  Trash2
+  Trash2,
+  StickyNote,
+  CalendarPlus
 } from "lucide-react";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { useEffect, useState } from "react";
@@ -89,7 +91,7 @@ export function ViewDetails({
 
   const categoryColor = item.categories?.[0]?.color_hex || '#6366f1';
   const isCompleted = item.status === "done";
-  const Icon = item.type === "reminder" ? Bell : Calendar;
+  const Icon = item.type === "reminder" ? Bell : item.type === "event" ? Calendar : StickyNote;
   
   const getItemDate = (): Date | null => {
     if (item.type === "event" && item.event_details?.start_at) {
@@ -189,6 +191,29 @@ export function ViewDetails({
 
           {/* Key Info Cards */}
           <div className="space-y-3 mb-6">
+            {/* "When is it due?" for Notes - Convert to Reminder */}
+            {item.type === "note" && (
+              <div className="p-4 rounded-xl bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 border-2 border-amber-200 dark:border-amber-700">
+                <div className="flex items-center gap-3 mb-3">
+                  <CalendarPlus size={20} className="text-amber-600" />
+                  <div>
+                    <div className="text-sm font-medium text-muted-foreground">Add a due date</div>
+                    <div className="text-xs text-muted-foreground">Convert this note to a reminder</div>
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    onEdit(item);
+                    onClose();
+                  }}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md hover:shadow-lg active:scale-95 transition-all font-medium"
+                >
+                  <Clock size={18} />
+                  <span>When is it due?</span>
+                </button>
+              </div>
+            )}
+
             {/* Time Info */}
             {itemDate && (
               <div className={`p-4 rounded-xl border-l-4 ${isOverdue ? 'bg-destructive/5 border-destructive' : 'bg-card border-primary'}`}>

@@ -50,13 +50,36 @@ function HomeContent() {
   const [isViewDetailsOpen, setIsViewDetailsOpen] = useState(false);
   const [isSettingsSidebarOpen, setIsSettingsSidebarOpen] = useState(false);
   const [viewDensity, setViewDensity] = useState<ViewDensity>("comfy");
+  const [showArchived, setShowArchived] = useState(() => {
+    // Initialize from localStorage
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem("showArchived") === "true";
+    }
+    return false;
+  });
   const [isLoading, setIsLoading] = useState(true);
 
   // Load items from database
   const loadItems = async () => {
     try {
       setIsLoading(true);
-      const data = await getItems();
+      
+      // Auto-archive old completed items (runs in background)
+      try {
+        const { autoArchiveOldCompletedItems } = await import('@/lib/database');
+        const archivedCount = await autoArchiveOldCompletedItems();
+        if (archivedCount > 0) {
+          console.log(`Auto-archived ${archivedCount} old completed items`);
+        }
+      } catch (archiveError) {
+        console.error('Auto-archive error:', archiveError);
+        // Don't fail the whole load if auto-archive fails
+      }
+      
+      // Load items based on showArchived setting
+      // When showArchived is true, load ALL items (both archived and non-archived)
+      // When showArchived is false, only load non-archived items
+      const data = await getItems({ isArchived: showArchived ? 'all' : false });
       setItems(data);
     } catch (error) {
       console.error("Error loading items:", error);
@@ -107,9 +130,6 @@ function HomeContent() {
   };
 
   useEffect(() => {
-    loadItems();
-    loadCategories();
-
     // Load view density from localStorage
     const savedDensity = localStorage.getItem("viewDensity") as
       | ViewDensity
@@ -117,7 +137,18 @@ function HomeContent() {
     if (savedDensity === "compact" || savedDensity === "comfy") {
       setViewDensity(savedDensity);
     }
+    
+    // Load items and categories (showArchived is already initialized from localStorage)
+    loadItems();
+    loadCategories();
   }, []);
+  
+  // Reload items when showArchived changes
+  useEffect(() => {
+    if (!isLoading) {
+      loadItems();
+    }
+  }, [showArchived]);
 
   // Enhance categories with keywords for smart parsing
   const enhancedCategories = useMemo(() => {
@@ -404,10 +435,8 @@ function HomeContent() {
         if (isEventToday || isReminderDueOrOverdue) tCount++;
       }
 
-      // NOTES: note items, or reminder with no due_at (note-like)
-  const r2 = it.reminder_details;
-  // Notes are represented as reminders without a due date
-  const isNoteLike = type === "reminder" && (!r2 || !r2.due_at);
+      // NOTES: items with type='note'
+      const isNoteLike = type === "note";
       if (isNoteLike) nCount++;
     }
 
@@ -456,6 +485,14 @@ function HomeContent() {
               `View changed to ${density === "compact" ? "Compact" : "Comfy"}`
             );
           }}
+          showArchived={showArchived}
+          onShowArchivedChange={(show) => {
+            setShowArchived(show);
+            localStorage.setItem("showArchived", show.toString());
+            toast.success(
+              show ? "Showing archived items" : "Hiding archived items"
+            );
+          }}
         />
 
         <main className="relative max-w-2xl mx-auto px-4 pt-4">
@@ -497,6 +534,7 @@ function HomeContent() {
                   onEdit={handleView}
                   onDelete={handleDelete}
                   viewDensity={viewDensity}
+                  showArchived={showArchived}
                 />
               )}
 

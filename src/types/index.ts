@@ -1,6 +1,6 @@
 // Core data types matching Supabase schema
 
-export type ItemType = "reminder" | "event";
+export type ItemType = "reminder" | "event" | "note";
 
 export type Priority = "low" | "normal" | "high" | "urgent";
 

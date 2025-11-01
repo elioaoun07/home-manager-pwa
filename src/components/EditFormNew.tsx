@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { ItemWithDetails, ItemType, Priority, Subtask } from "@/types";
 import { 
   X, Save, Tag, Calendar, Clock, 
-  MapPin, Plus, Trash2, Check, Globe, Lock
+  MapPin, Plus, Trash2, Check, Globe, Lock, StickyNote
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AlarmPicker, AlarmConfig } from "./AlarmPicker";
@@ -66,6 +66,20 @@ export function EditFormNew({ item, categories, onSave, onCancel }: EditFormProp
         setAllDay(item.event_details.all_day);
         setLocation(item.event_details.location_text || "");
       }
+
+      // Load existing alerts/alarms
+      if (item.alerts && item.alerts.length > 0) {
+        const loadedAlarms: AlarmConfig[] = item.alerts.map(alert => ({
+          id: alert.id,
+          type: alert.kind === 'absolute' ? 'absolute' : 'relative',
+          offset_minutes: alert.kind === 'relative' ? alert.offset_minutes : undefined,
+          absolute_time: alert.kind === 'absolute' ? alert.trigger_at : undefined,
+          channel: alert.channel as 'push' | 'email' | 'sms',
+        }));
+        setAlarms(loadedAlarms);
+      } else {
+        setAlarms([]);
+      }
       
       if (item.reminder_details) {
         if (item.reminder_details.due_at) {
@@ -94,6 +108,9 @@ export function EditFormNew({ item, categories, onSave, onCancel }: EditFormProp
       setStartTime(currentTime);
       setEndDate(tomorrowStr);
       setEndTime(currentTime);
+
+      // Reset alarms for new items
+      setAlarms([]);
       
       // Select first category (Personal) by default
       if (categories.length > 0) {
@@ -102,12 +119,15 @@ export function EditFormNew({ item, categories, onSave, onCancel }: EditFormProp
     }
   }, [item, categories]);
 
-  // Ensure status defaults depending on type
+  // Ensure status defaults depending on type - ONLY for new items
   useEffect(() => {
+    // Skip this logic if we're editing an existing item
+    if (item) return;
+    
     setFormData((prev) => {
       if (!prev) return prev;
-      // For reminders always default to pending
-      if (prev.type === "reminder" && prev.status !== "pending") {
+      // For reminders and notes always default to pending
+      if ((prev.type === "reminder" || prev.type === "note") && prev.status !== "pending") {
         return { ...prev, status: "pending" };
       }
       // For events restrict to pending/tentative (default pending)
@@ -116,7 +136,7 @@ export function EditFormNew({ item, categories, onSave, onCancel }: EditFormProp
       }
       return prev;
     });
-  }, [formData.type]);
+  }, [formData.type, item]);
 
   // When user updates the start date via the input, if start becomes after end,
   // automatically bump end date to start + 1 day to avoid invalid ranges.
@@ -184,6 +204,10 @@ export function EditFormNew({ item, categories, onSave, onCancel }: EditFormProp
       };
       
       await onSave(data as Parameters<typeof onSave>[0]);
+    } else if (formData.type === "note") {
+      // Notes don't have event_details or reminder_details
+      // Status should be set to pending by default (already handled in useEffect)
+      await onSave(data as Parameters<typeof onSave>[0]);
     } else {
       await onSave(data as Parameters<typeof onSave>[0]);
     }
@@ -212,6 +236,7 @@ export function EditFormNew({ item, categories, onSave, onCancel }: EditFormProp
   const typeIcons = {
     reminder: Clock,
     event: Calendar,
+    note: StickyNote,
   };
 
   const priorityConfig = {
@@ -254,7 +279,7 @@ export function EditFormNew({ item, categories, onSave, onCancel }: EditFormProp
                 {item ? "Edit Item" : "Create Item"}
               </motion.h2>
               <p className="text-sm text-muted-foreground mt-1">
-                {formData.type === "reminder" ? "Set up your reminder" : "Schedule your event"}
+                {formData.type === "reminder" ? "Set up your reminder" : formData.type === "event" ? "Schedule your event" : "Create a quick note"}
               </p>
             </div>
             
@@ -325,8 +350,8 @@ export function EditFormNew({ item, categories, onSave, onCancel }: EditFormProp
             <h3 className="text-xl font-bold gradient-text">Choose Type</h3>
           </div>
           
-          <div className="grid grid-cols-2 gap-4">
-            {(["reminder", "event"] as ItemType[]).map((type) => {
+          <div className="grid grid-cols-3 gap-4">
+            {(["reminder", "event", "note"] as ItemType[]).map((type) => {
               const Icon = typeIcons[type];
               const isSelected = formData.type === type;
               
@@ -342,7 +367,9 @@ export function EditFormNew({ item, categories, onSave, onCancel }: EditFormProp
                     ${isSelected 
                       ? type === "reminder"
                         ? "bg-gradient-to-br from-blue-500 to-blue-600 border-blue-400 text-white shadow-lg shadow-blue-500/30"
-                        : "bg-gradient-to-br from-emerald-500 to-teal-600 border-emerald-400 text-white shadow-lg shadow-emerald-500/30"
+                        : type === "event"
+                        ? "bg-gradient-to-br from-emerald-500 to-teal-600 border-emerald-400 text-white shadow-lg shadow-emerald-500/30"
+                        : "bg-gradient-to-br from-amber-500 to-orange-500 border-orange-400 text-white shadow-lg shadow-orange-500/30"
                       : "border-white/20 dark:border-gray-700/50 hover:border-primary/50 glass"}
                   `}
                 >
@@ -402,7 +429,8 @@ export function EditFormNew({ item, categories, onSave, onCancel }: EditFormProp
         </motion.div>
 
 
-        {/* Step 3: When (Date & Time) */}
+        {/* Step 3: When (Date & Time) - Hidden for Notes */}
+        {formData.type !== "note" && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -710,8 +738,9 @@ export function EditFormNew({ item, categories, onSave, onCancel }: EditFormProp
             </div>
           )}
         </motion.div>
+        )}
 
-        {/* Step 4: Priority & Categories */}
+        {/* Step 4: Priority & Categories (Step 3 for Notes) */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -723,7 +752,7 @@ export function EditFormNew({ item, categories, onSave, onCancel }: EditFormProp
               whileHover={{ scale: 1.1, rotate: 5 }}
               className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 text-white flex items-center justify-center text-base font-bold shadow-lg"
             >
-              4
+              {formData.type === "note" ? "3" : "4"}
             </motion.div>
             <h3 className="text-xl font-bold gradient-text">How important is it?</h3>
           </div>
