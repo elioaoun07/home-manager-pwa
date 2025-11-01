@@ -696,7 +696,7 @@ export function CalendarViewNew({ items, onToggleComplete, onEdit, onDelete, onA
                     </div>
                     <h3 className="text-xl font-bold mb-2">No Events Scheduled</h3>
                     <p className="text-sm text-muted-foreground text-center max-w-sm">
-                      You don't have any events or reminders during this {viewMode === "3day" ? "3-day" : "week"} period.
+                      You do not have any events or reminders during this {viewMode === "3day" ? "3-day" : "week"} period.
                       Tap the + button to create one!
                     </p>
                   </motion.div>
